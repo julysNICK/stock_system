@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS "stock_alerts";
+DROP TABLE IF EXISTS "sales";
+DROP TABLE IF EXISTS "suppliers";
+DROP TABLE IF EXISTS "products";
+DROP TABLE IF EXISTS "stores";
