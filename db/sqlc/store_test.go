@@ -84,9 +84,6 @@ func TestGetStoreForUpdate(t *testing.T){
 }
 
 func TestListStore(t *testing.T){
-	
-
-
 	arg := ListStoresParams{
 		Limit:  10,
 		Offset: 0,
