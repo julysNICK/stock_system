@@ -1,5 +1,5 @@
 CREATE TABLE "stores" (
-  "id" int PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
   "address" varchar NOT NULL,
   "contact_email" varchar NOT NULL,
@@ -9,17 +9,17 @@ CREATE TABLE "stores" (
 );
 
 CREATE TABLE "products" (
-  "id" int PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
   "description" varchar NOT NULL,
   "price" decimal NOT NULL,
   "quantity" int NOT NULL,
-  "store_id" int NOT NULL,
+  "store_id" bigint NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "suppliers" (
-  "id" int PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
   "address" varchar NOT NULL,
   "email" varchar NOT NULL,
@@ -28,17 +28,17 @@ CREATE TABLE "suppliers" (
 );
 
 CREATE TABLE "sales" (
-  "id" int PRIMARY KEY,
-  "product_id" int NOT NULL,
+  "id" bigserial PRIMARY KEY,
+  "product_id" bigint NOT NULL,
   "sale_date" date NOT NULL,
   "quantity_sold" int NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "stock_alerts" (
-  "id" int PRIMARY KEY,
-  "product_id" int,
-  "supplier_id" int,
+  "id" bigserial PRIMARY KEY,
+  "product_id" bigint,
+  "supplier_id" bigint,
   "alert_quantity" int NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );

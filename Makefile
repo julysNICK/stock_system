@@ -23,4 +23,7 @@ initdocker:
 sqlc:
 	sqlc generate
 
-.PHONY: postgres createdb dropdb migrateup migratedown new_migration initdocker sqlc
+test:
+	go test -v -cover ./...
+
+.PHONY: postgres createdb dropdb migrateup migratedown new_migration initdocker sqlc test

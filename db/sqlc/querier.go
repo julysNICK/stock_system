@@ -13,6 +13,7 @@ type Querier interface {
 	GetStore(ctx context.Context, id int32) (Store, error)
 	GetStoreForUpdate(ctx context.Context, id int32) (Store, error)
 	ListStores(ctx context.Context, arg ListStoresParams) ([]Store, error)
+	UpdateStore(ctx context.Context, arg UpdateStoreParams) (Store, error)
 }
 
 var _ Querier = (*Queries)(nil)

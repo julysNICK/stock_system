@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const createStore = `-- name: CreateStore :one
@@ -127,4 +128,46 @@ func (q *Queries) ListStores(ctx context.Context, arg ListStoresParams) ([]Store
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateStore = `-- name: UpdateStore :one
+UPDATE stores SET
+name = COALESCE($2, name),
+address = COALESCE($3, address),
+contact_email = COALESCE($4, contact_email),
+contact_phone = COALESCE($5, contact_phone),
+hashed_password = COALESCE($6, hashed_password)
+WHERE id = $1
+RETURNING id, name, address, contact_email, contact_phone, hashed_password, created_at
+`
+
+type UpdateStoreParams struct {
+	ID             int32          `json:"id"`
+	Name           sql.NullString `json:"name"`
+	Address        sql.NullString `json:"address"`
+	ContactEmail   sql.NullString `json:"contactEmail"`
+	ContactPhone   sql.NullString `json:"contactPhone"`
+	HashedPassword sql.NullString `json:"hashedPassword"`
+}
+
+func (q *Queries) UpdateStore(ctx context.Context, arg UpdateStoreParams) (Store, error) {
+	row := q.db.QueryRowContext(ctx, updateStore,
+		arg.ID,
+		arg.Name,
+		arg.Address,
+		arg.ContactEmail,
+		arg.ContactPhone,
+		arg.HashedPassword,
+	)
+	var i Store
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Address,
+		&i.ContactEmail,
+		&i.ContactPhone,
+		&i.HashedPassword,
+		&i.CreatedAt,
+	)
+	return i, err
 }
