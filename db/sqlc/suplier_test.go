@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"log"
 	"testing"
 	"time"
 
@@ -89,8 +88,6 @@ func TestUpdateSupplier(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, supplier2)
-	log.Println("supplier2", supplier2)
-	log.Println("supplier1", supplier1)
 	require.Equal(t, arg.Name.String, supplier2.Name)
 
 	require.Equal(t, arg.Email.String, supplier2.Email)

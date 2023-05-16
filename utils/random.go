@@ -3,6 +3,7 @@ package utils
 import (
 	"math/rand"
 	"strings"
+	"time"
 )
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -42,4 +43,8 @@ func RandomPassword() string {
 
 func RandomInt(min, max int) int {
 	return min + rand.Intn(max-min)
+}
+
+func RandomDate() time.Time {
+	return time.Now().AddDate(0, 0, RandomInt(1, 100))
 }

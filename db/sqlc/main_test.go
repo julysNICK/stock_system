@@ -9,18 +9,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
-
 const (
 	dbDriver = "postgres"
 	dbSource = "postgresql://root:secret@localhost:5432/stock_system?sslmode=disable"
 )
 
-
-
 var testQueries *Queries
 
-
-func TestMain(m *testing.M){
+func TestMain(m *testing.M) {
 	conn, err := sql.Open(dbDriver, dbSource)
 
 	if err != nil {
@@ -28,7 +24,6 @@ func TestMain(m *testing.M){
 	}
 
 	testQueries = New(conn)
-
 
 	os.Exit(m.Run())
 }

@@ -30,7 +30,7 @@ CREATE TABLE "suppliers" (
 CREATE TABLE "sales" (
   "id" bigserial PRIMARY KEY,
   "product_id" bigint NOT NULL,
-  "sale_date" date NOT NULL,
+  "sale_date" timestamp NOT NULL DEFAULT (now()),
   "quantity_sold" int NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
