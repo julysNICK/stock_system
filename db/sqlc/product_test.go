@@ -271,3 +271,28 @@ func TestListProduct_RowsErr(t *testing.T) {
 
 	require.Empty(t, products)
 }
+
+func TestListProduct_RowsErrClose(t *testing.T) {
+	// mockTimer := time.Now()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "quantity", "store_id", "created_at"}).CloseError(fmt.Errorf("some error close"))
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
+		WithArgs(1, 0).
+		WillReturnRows(rows)
+
+	mockDb := New(db)
+
+	_, err = mockDb.ListProducts(context.Background(), ListProductsParams{
+		Limit:  1,
+		Offset: 0,
+	})
+
+	require.EqualError(t, err, "some error close")
+}
