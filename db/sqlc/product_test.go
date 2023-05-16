@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"regexp"
 	"testing"
 	"time"
@@ -178,4 +179,75 @@ func TestListProducts(t *testing.T) {
 
 	require.NotEmpty(t, products)
 
+}
+
+func TestListProduct_ErrorInQueryContext(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
+		WithArgs(1, 0).
+		WillReturnError(fmt.Errorf("some error"))
+
+	mockDb := New(db)
+
+	arg := ListProductsParams{
+		Limit:  1,
+		Offset: 0,
+	}
+
+	products, err := mockDb.ListProducts(context.Background(), arg)
+
+	require.Error(t, err)
+
+	require.Empty(t, products)
+
+}
+
+func TestListProduct_ErrorInRowsClose(t *testing.T) {
+	//	generate test for error in rows.close this query const listProducts = `-- name: ListProducts :many
+	//
+	// SELECT id, name, description, price, quantity, store_id, created_at FROM products
+	// ORDER BY id
+	// LIMIT $1
+	// OFFSET $2
+	// `
+
+	// mockTimer := time.Now()
+
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "quantity", "store_id", "created_at"}).
+		AddRow(1, "test", "test", 100, 10, 1, "2020-01-01 00:00:00")
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
+		WithArgs(1, 0).
+		WillReturnRows(rows)
+
+	mock.ExpectClose()
+
+	mockDb := New(db)
+
+	arg := ListProductsParams{
+		Limit:  1,
+		Offset: 0,
+	}
+
+	products, err := mockDb.ListProducts(context.Background(), arg)
+
+	require.Error(t, err)
+
+	require.Empty(t, products)
 }
