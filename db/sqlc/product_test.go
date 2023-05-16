@@ -210,16 +210,7 @@ func TestListProduct_ErrorInQueryContext(t *testing.T) {
 
 }
 
-func TestListProduct_ErrorInRowsClose(t *testing.T) {
-	//	generate test for error in rows.close this query const listProducts = `-- name: ListProducts :many
-	//
-	// SELECT id, name, description, price, quantity, store_id, created_at FROM products
-	// ORDER BY id
-	// LIMIT $1
-	// OFFSET $2
-	// `
-
-	// mockTimer := time.Now()
+func TestListProduct_ErrorInScan(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 
@@ -237,6 +228,35 @@ func TestListProduct_ErrorInRowsClose(t *testing.T) {
 		WillReturnRows(rows)
 
 	mock.ExpectClose()
+
+	mockDb := New(db)
+
+	arg := ListProductsParams{
+		Limit:  1,
+		Offset: 0,
+	}
+
+	products, err := mockDb.ListProducts(context.Background(), arg)
+
+	require.Error(t, err)
+
+	require.Empty(t, products)
+}
+
+func TestListProduct_RowsErr(t *testing.T) {
+	// mockTimer := time.Now()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "quantity", "store_id", "created_at"}).CloseError(fmt.Errorf("some error"))
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
+		WithArgs(1, 0).
+		WillReturnRows(rows)
 
 	mockDb := New(db)
 
