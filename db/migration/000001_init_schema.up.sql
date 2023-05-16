@@ -37,7 +37,7 @@ CREATE TABLE "sales" (
 
 CREATE TABLE "stock_alerts" (
   "id" bigserial PRIMARY KEY,
-  "product_id" bigint,
+  "product_id" bigint ,
   "supplier_id" bigint,
   "alert_quantity" int NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now())
