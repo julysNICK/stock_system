@@ -9,10 +9,15 @@ import (
 )
 
 type Querier interface {
+	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
 	CreateStore(ctx context.Context, arg CreateStoreParams) (Store, error)
-	GetStore(ctx context.Context, id int32) (Store, error)
-	GetStoreForUpdate(ctx context.Context, id int32) (Store, error)
+	GetProduct(ctx context.Context, id int64) (Product, error)
+	GetProductForUpdate(ctx context.Context, id int64) (Product, error)
+	GetStore(ctx context.Context, id int64) (Store, error)
+	GetStoreForUpdate(ctx context.Context, id int64) (Store, error)
+	ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error)
 	ListStores(ctx context.Context, arg ListStoresParams) ([]Store, error)
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error)
 	UpdateStore(ctx context.Context, arg UpdateStoreParams) (Store, error)
 }
 

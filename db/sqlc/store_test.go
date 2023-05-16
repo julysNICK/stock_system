@@ -9,17 +9,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
-func createRandomStore(t *testing.T) Store {
+func CreateRandomStore(t *testing.T) Store {
 	hashedPassword := utils.RandomPassword()
 	require.NotEmpty(t, hashedPassword)
 
 	arg := CreateStoreParams{
-		Name: 				 utils.RandomName(),
-		Address: 			 utils.RandomAddress(),
-		ContactEmail: 		 utils.RandomEmail(),
-		ContactPhone: 		 utils.RandomPhone(),
-		HashedPassword: 	 hashedPassword,
+		Name:           utils.RandomName(),
+		Address:        utils.RandomAddress(),
+		ContactEmail:   utils.RandomEmail(),
+		ContactPhone:   utils.RandomPhone(),
+		HashedPassword: hashedPassword,
 	}
 
 	store, err := testQueries.CreateStore(context.Background(), arg)
@@ -39,13 +38,12 @@ func createRandomStore(t *testing.T) Store {
 	return store
 }
 
-
 func TestCreateStore(t *testing.T) {
-	createRandomStore(t)
+	CreateRandomStore(t)
 }
 
-func TestGetStore(t *testing.T){
-	store1 := createRandomStore(t)
+func TestGetStore(t *testing.T) {
+	store1 := CreateRandomStore(t)
 
 	store2, err := testQueries.GetStore(context.Background(), store1.ID)
 
@@ -63,9 +61,9 @@ func TestGetStore(t *testing.T){
 
 }
 
-func TestGetStoreForUpdate(t *testing.T){
+func TestGetStoreForUpdate(t *testing.T) {
 
-	store1 := createRandomStore(t)
+	store1 := CreateRandomStore(t)
 
 	store2, err := testQueries.GetStoreForUpdate(context.Background(), store1.ID)
 
@@ -73,7 +71,7 @@ func TestGetStoreForUpdate(t *testing.T){
 
 	require.NotEmpty(t, store2)
 
-  require.Equal(t, store1.ID, store2.ID)
+	require.Equal(t, store1.ID, store2.ID)
 	require.Equal(t, store1.Name, store2.Name)
 	require.Equal(t, store1.Address, store2.Address)
 	require.Equal(t, store1.ContactEmail, store2.ContactEmail)
@@ -83,7 +81,7 @@ func TestGetStoreForUpdate(t *testing.T){
 
 }
 
-func TestListStore(t *testing.T){
+func TestListStore(t *testing.T) {
 	arg := ListStoresParams{
 		Limit:  10,
 		Offset: 0,
@@ -95,7 +93,7 @@ func TestListStore(t *testing.T){
 	require.NotEmpty(t, stores)
 
 	require.Len(t, stores, 10)
-	
-	require.Equal(t, int32(1), stores[0].ID)
+
+	require.Equal(t, int64(1), stores[0].ID)
 
 }

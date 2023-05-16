@@ -18,8 +18,8 @@ new_migration:
 	migrate create -ext sql -dir db/migration -seq $(name)
 
 initdocker:
-	sudo systemctl start docker && sudo docker start postgres_stock_system
-
+	sudo systemctl start docker && sudo docker start postgres_stock_system && sudo docker start postgres_stock_system
+	
 sqlc:
 	sqlc generate
 

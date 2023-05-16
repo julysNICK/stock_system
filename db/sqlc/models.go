@@ -10,33 +10,33 @@ import (
 )
 
 type Product struct {
-	ID          int32     `json:"id"`
+	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Price       string    `json:"price"`
 	Quantity    int32     `json:"quantity"`
-	StoreID     int32     `json:"storeID"`
+	StoreID     int64     `json:"storeID"`
 	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type Sale struct {
-	ID           int32     `json:"id"`
-	ProductID    int32     `json:"productID"`
+	ID           int64     `json:"id"`
+	ProductID    int64     `json:"productID"`
 	SaleDate     time.Time `json:"saleDate"`
 	QuantitySold int32     `json:"quantitySold"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type StockAlert struct {
-	ID            int32         `json:"id"`
-	ProductID     sql.NullInt32 `json:"productID"`
-	SupplierID    sql.NullInt32 `json:"supplierID"`
+	ID            int64         `json:"id"`
+	ProductID     sql.NullInt64 `json:"productID"`
+	SupplierID    sql.NullInt64 `json:"supplierID"`
 	AlertQuantity int32         `json:"alertQuantity"`
 	CreatedAt     time.Time     `json:"createdAt"`
 }
 
 type Store struct {
-	ID             int32     `json:"id"`
+	ID             int64     `json:"id"`
 	Name           string    `json:"name"`
 	Address        string    `json:"address"`
 	ContactEmail   string    `json:"contactEmail"`
@@ -46,7 +46,7 @@ type Store struct {
 }
 
 type Supplier struct {
-	ID           int32     `json:"id"`
+	ID           int64     `json:"id"`
 	Name         string    `json:"name"`
 	Address      string    `json:"address"`
 	Email        string    `json:"email"`

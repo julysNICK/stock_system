@@ -11,12 +11,14 @@ import (
 )
 
 const createStore = `-- name: CreateStore :one
-INSERT into stores (name, 
+INSERT into stores (
+name, 
 address, 
 contact_email, 
 contact_phone, 
-hashed_password) values 
-($1, $2, $3, $4, $5) 
+hashed_password
+) values  (
+  $1, $2, $3, $4, $5) 
 RETURNING id, name, address, contact_email, contact_phone, hashed_password, created_at
 `
 
@@ -53,7 +55,7 @@ const getStore = `-- name: GetStore :one
 SELECT id, name, address, contact_email, contact_phone, hashed_password, created_at FROM stores WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetStore(ctx context.Context, id int32) (Store, error) {
+func (q *Queries) GetStore(ctx context.Context, id int64) (Store, error) {
 	row := q.db.QueryRowContext(ctx, getStore, id)
 	var i Store
 	err := row.Scan(
@@ -72,7 +74,7 @@ const getStoreForUpdate = `-- name: GetStoreForUpdate :one
 SELECT id, name, address, contact_email, contact_phone, hashed_password, created_at FROM stores WHERE id = $1 LIMIT 1 FOR UPDATE FOR NO KEY UPDATE
 `
 
-func (q *Queries) GetStoreForUpdate(ctx context.Context, id int32) (Store, error) {
+func (q *Queries) GetStoreForUpdate(ctx context.Context, id int64) (Store, error) {
 	row := q.db.QueryRowContext(ctx, getStoreForUpdate, id)
 	var i Store
 	err := row.Scan(
@@ -142,7 +144,7 @@ RETURNING id, name, address, contact_email, contact_phone, hashed_password, crea
 `
 
 type UpdateStoreParams struct {
-	ID             int32          `json:"id"`
+	ID             int64          `json:"id"`
 	Name           sql.NullString `json:"name"`
 	Address        sql.NullString `json:"address"`
 	ContactEmail   sql.NullString `json:"contactEmail"`
