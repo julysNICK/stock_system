@@ -23,6 +23,8 @@ func NewServer(store *db.StoreDB) *Server {
 
 	router.POST("/stores", server.CreateStore)
 	router.GET("/stores/:store_id", server.GetStore)
+	router.GET("/stores", server.ListStores)
+	router.PATCH("/stores/:store_id", server.UpdateStore)
 
 	server.router = router
 
