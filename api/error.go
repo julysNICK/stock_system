@@ -1,7 +1,11 @@
 package api
 
 import (
-	"github.com/go-playground/validator"
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type ErrorMsg struct {
@@ -25,5 +29,23 @@ func getErrorMsg(fe validator.FieldError) string {
 
 	default:
 		return "This field is invalid"
+	}
+}
+
+func validatorErrorParserInParams(ctx *gin.Context, err error) {
+	var verr validator.ValidationErrors
+
+	erroAs := errors.As(err, &verr)
+
+	if erroAs {
+		out := make([]ErrorMsg, len(verr))
+		for i, fe := range verr {
+			out[i] = ErrorMsg{
+				Field:   fe.Field(),
+				Message: getErrorMsg(fe),
+			}
+
+		}
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"errors": out})
 	}
 }

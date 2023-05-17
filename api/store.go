@@ -1,11 +1,9 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	db "github.com/julysNICK/stock_system/db/sqlc"
 )
 
@@ -21,23 +19,7 @@ func (server *Server) CreateStore(ctx *gin.Context) {
 	var req CreateStoreRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-
-		var verr validator.ValidationErrors
-
-		erroAs := errors.As(err, &verr)
-
-		if erroAs {
-			out := make([]ErrorMsg, len(verr))
-			for i, fe := range verr {
-				out[i] = ErrorMsg{
-					Field:   fe.Field(),
-					Message: getErrorMsg(fe),
-				}
-
-			}
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"errors": out})
-		}
-
+		validatorErrorParserInParams(ctx, err)
 		return
 	}
 
@@ -56,4 +38,28 @@ func (server *Server) CreateStore(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, store)
+}
+
+type getSalesRequest struct {
+	StoreID int64 `uri:"store_id" binding:"required,min=1"`
+}
+
+func (server *Server) GetStore(ctx *gin.Context) {
+	var req getSalesRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	sale, err := server.store.GetStore(ctx, req.StoreID)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, sale)
+
 }
