@@ -3,6 +3,12 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
+)
+
+const (
+	ErrorProductNotFound  = "product not found"
+	ErrorSupplierNotFound = "supplier not found"
 )
 
 type StockAlertTxParams struct {
@@ -21,7 +27,20 @@ func (store *StoreDB) StockAlertTx(ctx context.Context, arg StockAlertTxParams) 
 	var result StockAlertTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
+
 		var err error
+
+		if arg.ProductID <= 0 {
+			return fmt.Errorf(ErrorProductNotFound)
+		}
+
+		if arg.SupplierID <= 0 {
+			return fmt.Errorf(ErrorSupplierNotFound)
+		}
+
+		if arg.AlertQuantity <= 0 {
+			return fmt.Errorf("alert quantity must be greater than 0")
+		}
 
 		result.Product, err = q.GetProduct(ctx, arg.ProductID)
 		if err != nil {
