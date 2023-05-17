@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -47,8 +48,8 @@ type getSalesRequest struct {
 func (server *Server) GetStore(ctx *gin.Context) {
 	var req getSalesRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		log.Println("error")
 		validatorErrorParserInParams(ctx, err)
 		return
 	}
