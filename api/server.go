@@ -13,6 +13,14 @@ type Server struct {
 func NewServer(store *db.StoreDB) *Server {
 	server := &Server{store: store}
 
+	server.setupRouter()
+
+	return server
+
+}
+
+func (server *Server) setupRouter() {
+
 	router := gin.Default()
 
 	router.GET("/hello", func(c *gin.Context) {
@@ -46,9 +54,6 @@ func NewServer(store *db.StoreDB) *Server {
 	router.DELETE("/stock_alerts/:stock_alert_id", server.DeleteStockAlert)
 
 	server.router = router
-
-	return server
-
 }
 
 func (server *Server) Start(address string) error {
