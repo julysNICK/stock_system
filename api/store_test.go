@@ -104,6 +104,16 @@ func requireBodyMatchStore(t *testing.T, body *bytes.Buffer, store db.Store) {
 	require.Equal(t, store, gotStore)
 }
 
+func requireBodyMatchStoreList(t *testing.T, body *bytes.Buffer, stores []db.Store) {
+	data, err := ioutil.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotStores []db.Store
+	err = json.Unmarshal(data, &gotStores)
+	require.NoError(t, err)
+	require.Equal(t, stores, gotStores)
+}
+
 func TestGetStore(t *testing.T) {
 	storeRandom := randomStore(t)
 
@@ -297,6 +307,90 @@ func TestCreateStore(t *testing.T) {
 				url := "/stores"
 
 				request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+
+				server.router.ServeHTTP(recorder, request)
+				tc.checkResponse(t, recorder)
+			},
+		)
+
+	}
+
+}
+
+func TestListStore(t *testing.T) {
+	storeRandom := randomStore(t)
+
+	listsStores := []db.Store{storeRandom, storeRandom, storeRandom}
+
+	testCase := []struct {
+		name          string
+		limit         int32
+		offset        int64
+		buildStubs    func(store *mockdb.MockStoreDB)
+		checkResponse func(t *testing.T, recoder *httptest.ResponseRecorder)
+	}{
+		{
+			name:   "OK",
+			limit:  2,
+			offset: 1,
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().ListStores(gomock.Any(), gomock.Any()).Times(1).
+					Return(listsStores, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchStoreList(t, recorder.Body, listsStores)
+			},
+		},
+
+		{
+			name:   "INTERNAL ERROR",
+			limit:  2,
+			offset: 1,
+			buildStubs: func(store *mockdb.MockStoreDB) {
+
+				store.EXPECT().ListStores(gomock.Any(), gomock.Any()).Times(1).
+					Return(nil, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name:   "PARAMS ERROR LIMIT",
+			limit:  -1,
+			offset: 0,
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().ListStores(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+
+			},
+		},
+	}
+
+	for i := range testCase {
+		tc := testCase[i]
+
+		t.Run(
+			tc.name,
+			func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+
+				defer ctrl.Finish()
+
+				store := mockdb.NewMockStoreDB(ctrl)
+				tc.buildStubs(store)
+
+				server := NewServer(store)
+
+				recorder := httptest.NewRecorder()
+
+				url := fmt.Sprintf("/stores?limit=%d&offset=%d", tc.limit, tc.offset)
+
+				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 
 				server.router.ServeHTTP(recorder, request)
