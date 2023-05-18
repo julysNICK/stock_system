@@ -154,6 +154,9 @@ func (server *Server) UpdateStore(ctx *gin.Context) {
 	store, err := server.store.UpdateStore(ctx, arg)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}

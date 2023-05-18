@@ -203,6 +203,234 @@ func TestGetStore(t *testing.T) {
 
 }
 
+func TestUpdateStore(t *testing.T) {
+	storeRandom := randomStore(t)
+	updateStore := db.Store{
+		ID:             storeRandom.ID,
+		Name:           "test",
+		Address:        "postpost",
+		ContactEmail:   "test@test.com",
+		ContactPhone:   "99 991309493",
+		HashedPassword: "2222222222222",
+	}
+	testCase := []struct {
+		name          string
+		AccountId     int64
+		body          gin.H
+		buildStubs    func(store *mockdb.MockStoreDB)
+		checkResponse func(t *testing.T, recoder *httptest.ResponseRecorder)
+	}{
+		{
+			name:      "OK",
+			AccountId: storeRandom.ID,
+			body: gin.H{
+				"name":            updateStore.Name,
+				"address":         updateStore.Address,
+				"contact_email":   updateStore.ContactEmail,
+				"contact_phone":   updateStore.ContactPhone,
+				"hashed_password": updateStore.HashedPassword,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+
+				arg := db.UpdateStoreParams{
+					ID: storeRandom.ID,
+					Name: sql.NullString{
+						String: updateStore.Name,
+						Valid:  true,
+					},
+
+					Address: sql.NullString{
+						String: updateStore.Address,
+						Valid:  true,
+					},
+					ContactEmail: sql.NullString{
+						String: updateStore.ContactEmail,
+						Valid:  true,
+					},
+
+					ContactPhone: sql.NullString{
+						String: updateStore.ContactPhone,
+						Valid:  true,
+					},
+
+					HashedPassword: sql.NullString{
+						String: updateStore.HashedPassword,
+						Valid:  true,
+					},
+				}
+
+				store.EXPECT().UpdateStore(gomock.Any(), gomock.Eq(arg)).Times(1).
+					Return(updateStore, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchStore(t, recorder.Body, updateStore)
+			},
+		},
+		{
+			name:      "NOT FOUND",
+			AccountId: storeRandom.ID,
+			body: gin.H{
+				"name":            updateStore.Name,
+				"address":         updateStore.Address,
+				"contact_email":   updateStore.ContactEmail,
+				"contact_phone":   updateStore.ContactPhone,
+				"hashed_password": updateStore.HashedPassword,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				arg := db.UpdateStoreParams{
+					ID: storeRandom.ID,
+					Name: sql.NullString{
+						String: updateStore.Name,
+						Valid:  true,
+					},
+
+					Address: sql.NullString{
+						String: updateStore.Address,
+						Valid:  true,
+					},
+					ContactEmail: sql.NullString{
+						String: updateStore.ContactEmail,
+						Valid:  true,
+					},
+
+					ContactPhone: sql.NullString{
+						String: updateStore.ContactPhone,
+						Valid:  true,
+					},
+
+					HashedPassword: sql.NullString{
+						String: updateStore.HashedPassword,
+						Valid:  true,
+					},
+				}
+
+				store.EXPECT().UpdateStore(gomock.Any(), gomock.Eq(arg)).Times(1).
+					Return(db.Store{}, sql.ErrNoRows)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+
+			},
+		},
+		{
+			name:      "INTERNAL ERROR",
+			AccountId: storeRandom.ID,
+			body: gin.H{
+				"name":            updateStore.Name,
+				"address":         updateStore.Address,
+				"contact_email":   updateStore.ContactEmail,
+				"contact_phone":   updateStore.ContactPhone,
+				"hashed_password": updateStore.HashedPassword,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				arg := db.UpdateStoreParams{
+					ID: storeRandom.ID,
+					Name: sql.NullString{
+						String: updateStore.Name,
+						Valid:  true,
+					},
+
+					Address: sql.NullString{
+						String: updateStore.Address,
+						Valid:  true,
+					},
+					ContactEmail: sql.NullString{
+						String: updateStore.ContactEmail,
+						Valid:  true,
+					},
+
+					ContactPhone: sql.NullString{
+						String: updateStore.ContactPhone,
+						Valid:  true,
+					},
+
+					HashedPassword: sql.NullString{
+						String: updateStore.HashedPassword,
+						Valid:  true,
+					},
+				}
+
+				store.EXPECT().UpdateStore(gomock.Any(), gomock.Eq(arg)).Times(1).
+					Return(db.Store{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+
+			},
+		},
+		{
+			name:      "PARAMS ERROR URI",
+			AccountId: 0,
+			body: gin.H{
+				"name":            updateStore.Name,
+				"address":         updateStore.Address,
+				"contact_email":   updateStore.ContactEmail,
+				"contact_phone":   updateStore.ContactPhone,
+				"hashed_password": updateStore.HashedPassword,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().UpdateProduct(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+
+			},
+		},
+
+		{
+			name:      "PARAMS ERROR BODY",
+			AccountId: storeRandom.ID,
+			body: gin.H{
+
+				"address":         updateStore.Address,
+				"contact_email":   updateStore.ContactEmail,
+				"contact_phone":   updateStore.ContactPhone,
+				"hashed_password": updateStore.HashedPassword,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().UpdateProduct(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+
+			},
+		},
+	}
+
+	for i := range testCase {
+		tc := testCase[i]
+
+		t.Run(
+			tc.name,
+			func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+
+				defer ctrl.Finish()
+
+				store := mockdb.NewMockStoreDB(ctrl)
+				tc.buildStubs(store)
+
+				server := NewServer(store)
+
+				recorder := httptest.NewRecorder()
+				data, err := json.Marshal(tc.body)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/stores/%d", tc.AccountId)
+
+				request, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(data))
+				require.NoError(t, err)
+
+				server.router.ServeHTTP(recorder, request)
+				tc.checkResponse(t, recorder)
+			},
+		)
+
+	}
+
+}
+
 func TestCreateStore(t *testing.T) {
 	storeRandom := randomStore(t)
 
