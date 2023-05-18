@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	mockdb "github.com/julysNICK/stock_system/db/mock"
 	db "github.com/julysNICK/stock_system/db/sqlc"
@@ -181,6 +182,121 @@ func TestGetStore(t *testing.T) {
 				url := fmt.Sprintf("/stores/%d", tc.AccountId)
 
 				request, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+
+				server.router.ServeHTTP(recorder, request)
+				tc.checkResponse(t, recorder)
+			},
+		)
+
+	}
+
+}
+
+func TestCreateStore(t *testing.T) {
+	storeRandom := randomStore(t)
+
+	testCase := []struct {
+		name          string
+		body          gin.H
+		buildStubs    func(store *mockdb.MockStoreDB)
+		checkResponse func(t *testing.T, recoder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			body: gin.H{
+				"name":            storeRandom.Name,
+				"address":         storeRandom.Address,
+				"contact_email":   storeRandom.ContactEmail,
+				"contact_phone":   storeRandom.ContactPhone,
+				"hashed_password": storeRandom.HashedPassword,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+
+				arg := db.CreateStoreParams{
+					Name:           storeRandom.Name,
+					Address:        storeRandom.Address,
+					ContactEmail:   storeRandom.ContactEmail,
+					ContactPhone:   storeRandom.ContactPhone,
+					HashedPassword: storeRandom.HashedPassword,
+				}
+
+				store.EXPECT().CreateStore(gomock.Any(), gomock.Eq(arg)).Times(1).
+					Return(storeRandom, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchStore(t, recorder.Body, storeRandom)
+			},
+		},
+
+		{
+			name: "INTERNAL ERROR",
+			body: gin.H{
+				"name":            storeRandom.Name,
+				"address":         storeRandom.Address,
+				"contact_email":   storeRandom.ContactEmail,
+				"contact_phone":   storeRandom.ContactPhone,
+				"hashed_password": storeRandom.HashedPassword,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				arg := db.CreateStoreParams{
+					Name:           storeRandom.Name,
+					Address:        storeRandom.Address,
+					ContactEmail:   storeRandom.ContactEmail,
+					ContactPhone:   storeRandom.ContactPhone,
+					HashedPassword: storeRandom.HashedPassword,
+				}
+				store.EXPECT().CreateStore(gomock.Any(), gomock.Eq(arg)).Times(1).
+					Return(db.Store{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+
+			},
+		},
+		{
+			name: "PARAMS ERROR",
+			body: gin.H{
+
+				"address":         storeRandom.Address,
+				"contact_email":   storeRandom.ContactEmail,
+				"contact_phone":   storeRandom.ContactPhone,
+				"hashed_password": storeRandom.HashedPassword,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().GetStore(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+
+			},
+		},
+	}
+
+	for i := range testCase {
+		tc := testCase[i]
+
+		t.Run(
+			tc.name,
+			func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+
+				defer ctrl.Finish()
+
+				store := mockdb.NewMockStoreDB(ctrl)
+				tc.buildStubs(store)
+
+				server := NewServer(store)
+
+				recorder := httptest.NewRecorder()
+
+				data, err := json.Marshal(tc.body)
+				require.NoError(t, err)
+
+				url := "/stores"
+
+				request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 				require.NoError(t, err)
 
 				server.router.ServeHTTP(recorder, request)
