@@ -62,6 +62,25 @@ func TestGetStore(t *testing.T) {
 
 }
 
+func TestGetStoreByEmail(t *testing.T) {
+	store1 := CreateRandomStore(t)
+
+	store2, err := testQueries.GetStoreByEmail(context.Background(), store1.ContactEmail)
+
+	require.NoError(t, err)
+
+	require.NotEmpty(t, store2)
+
+	require.Equal(t, store1.ID, store2.ID)
+	require.Equal(t, store1.Name, store2.Name)
+	require.Equal(t, store1.Address, store2.Address)
+	require.Equal(t, store1.ContactEmail, store2.ContactEmail)
+	require.Equal(t, store1.ContactPhone, store2.ContactPhone)
+	require.Equal(t, store1.HashedPassword, store2.HashedPassword)
+	require.WithinDuration(t, store1.CreatedAt, store2.CreatedAt, time.Second)
+
+}
+
 func TestGetStoreForUpdate(t *testing.T) {
 
 	store1 := CreateRandomStore(t)

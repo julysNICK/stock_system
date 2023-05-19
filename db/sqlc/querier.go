@@ -21,6 +21,7 @@ type Querier interface {
 	GetSale(ctx context.Context, id int64) (Sale, error)
 	GetStockAlert(ctx context.Context, id int64) (StockAlert, error)
 	GetStore(ctx context.Context, id int64) (Store, error)
+	GetStoreByEmail(ctx context.Context, contactEmail string) (Store, error)
 	GetStoreForUpdate(ctx context.Context, id int64) (Store, error)
 	GetSupplier(ctx context.Context, id int64) (Supplier, error)
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error)

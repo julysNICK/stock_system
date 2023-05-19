@@ -12,6 +12,10 @@ RETURNING *;
 -- name: GetStore :one
 SELECT * FROM stores WHERE id = $1 LIMIT 1;
 
+
+-- name: GetStoreByEmail :one
+SELECT * FROM stores WHERE contact_email = $1 LIMIT 1;
+
 -- name: GetStoreForUpdate :one
 SELECT * FROM stores WHERE id = $1 LIMIT 1 FOR UPDATE FOR NO KEY UPDATE;
 
