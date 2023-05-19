@@ -1,6 +1,8 @@
 package api
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -19,6 +21,7 @@ func (server *Server) CreateSale(ctx *gin.Context) {
 	var req CreateSaleRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		log.Println(err)
 		validatorErrorParserInParams(ctx, err)
 		return
 	}
@@ -32,6 +35,7 @@ func (server *Server) CreateSale(ctx *gin.Context) {
 	sale, err := server.store.SaleTx(ctx, arg)
 
 	if err != nil {
+		log.Println(err)
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 	}
 
@@ -53,6 +57,9 @@ func (server *Server) GetSale(ctx *gin.Context) {
 	sale, err := server.store.GetSale(ctx, req.SaleID)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 	}
 
@@ -74,6 +81,9 @@ func (server *Server) DeleteSale(ctx *gin.Context) {
 	err := server.store.DeleteSale(ctx, req.SaleID)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 	}
 
