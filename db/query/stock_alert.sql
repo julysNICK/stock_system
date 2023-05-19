@@ -12,6 +12,10 @@ INSERT INTO stock_alerts (
   SELECT * FROM stock_alerts WHERE id = $1 LIMIT 1;
 
 
+  -- name: GetStockAlertsByProductIdAndSupplierId :many
+  SELECT * FROM stock_alerts WHERE product_id = $1 AND supplier_id = $2;
+
+
   -- name: DeleteStockAlert :exec
   DELETE FROM stock_alerts WHERE id = $1;
 

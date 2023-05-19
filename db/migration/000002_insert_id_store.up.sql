@@ -1,0 +1,1 @@
+ALTER TABLE "stock_alerts" ADD FOREIGN KEY ("store_id") REFERENCES "stores" ("id");

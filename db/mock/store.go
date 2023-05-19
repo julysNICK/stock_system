@@ -198,6 +198,36 @@ func (mr *MockStoreDBMockRecorder) GetStockAlert(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStockAlert", reflect.TypeOf((*MockStoreDB)(nil).GetStockAlert), arg0, arg1)
 }
 
+// GetStockAlertsByIdAndBySupplierTx mocks base method.
+func (m *MockStoreDB) GetStockAlertsByIdAndBySupplierTx(arg0 context.Context, arg1 db.GetStockAlertTxsParams) (db.GetStockAlertTxsResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStockAlertsByIdAndBySupplierTx", arg0, arg1)
+	ret0, _ := ret[0].(db.GetStockAlertTxsResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStockAlertsByIdAndBySupplierTx indicates an expected call of GetStockAlertsByIdAndBySupplierTx.
+func (mr *MockStoreDBMockRecorder) GetStockAlertsByIdAndBySupplierTx(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStockAlertsByIdAndBySupplierTx", reflect.TypeOf((*MockStoreDB)(nil).GetStockAlertsByIdAndBySupplierTx), arg0, arg1)
+}
+
+// GetStockAlertsByProductIdAndSupplierId mocks base method.
+func (m *MockStoreDB) GetStockAlertsByProductIdAndSupplierId(arg0 context.Context, arg1 db.GetStockAlertsByProductIdAndSupplierIdParams) ([]db.StockAlert, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStockAlertsByProductIdAndSupplierId", arg0, arg1)
+	ret0, _ := ret[0].([]db.StockAlert)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStockAlertsByProductIdAndSupplierId indicates an expected call of GetStockAlertsByProductIdAndSupplierId.
+func (mr *MockStoreDBMockRecorder) GetStockAlertsByProductIdAndSupplierId(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStockAlertsByProductIdAndSupplierId", reflect.TypeOf((*MockStoreDB)(nil).GetStockAlertsByProductIdAndSupplierId), arg0, arg1)
+}
+
 // GetStore mocks base method.
 func (m *MockStoreDB) GetStore(arg0 context.Context, arg1 int64) (db.Store, error) {
 	m.ctrl.T.Helper()
