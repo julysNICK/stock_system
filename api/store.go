@@ -41,12 +41,12 @@ func (server *Server) CreateStore(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, store)
 }
 
-type getSalesRequest struct {
+type getStoreRequest struct {
 	StoreID int64 `uri:"store_id" binding:"required,min=1"`
 }
 
 func (server *Server) GetStore(ctx *gin.Context) {
-	var req getSalesRequest
+	var req getStoreRequest
 
 	if err := ctx.ShouldBindUri(&req); err != nil {
 
@@ -57,6 +57,12 @@ func (server *Server) GetStore(ctx *gin.Context) {
 	sale, err := server.store.GetStore(ctx, req.StoreID)
 
 	if err != nil {
+
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -148,6 +154,9 @@ func (server *Server) UpdateStore(ctx *gin.Context) {
 	store, err := server.store.UpdateStore(ctx, arg)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
