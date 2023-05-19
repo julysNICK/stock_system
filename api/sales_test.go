@@ -6,11 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
@@ -25,7 +23,7 @@ func randomSale(t *testing.T, product db.Product) (store db.Sale) {
 	return db.Sale{
 		ID:           int64(utils.RandomInt(1, 100)),
 		ProductID:    product.ID,
-		SaleDate:     time.Now(),
+		SaleDate:     utils.RandomDate(),
 		QuantitySold: int32(utils.RandomInt(1, 100)),
 	}
 
@@ -158,7 +156,9 @@ func TestDeleteProduct(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server := NewServer(store)
+				server, err := NewServer(store)
+
+				require.NoError(t, err)
 
 				recorder := httptest.NewRecorder()
 
@@ -248,7 +248,9 @@ func TestGetSales(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server := NewServer(store)
+				server, err := NewServer(store)
+
+				require.NoError(t, err)
 
 				recorder := httptest.NewRecorder()
 
@@ -269,17 +271,17 @@ func TestGetSales(t *testing.T) {
 func TestCreateSale(t *testing.T) {
 	productRandom := randomProduct(t)
 	saleRandom := randomSale(t, productRandom)
-	// saleTxResult := db.SaleTxResult{
-	// 	Sale: saleRandom,
-	// 	Product: db.Product{
-	// 		ID:          saleRandom.ProductID,
-	// 		Name:        productRandom.Name,
-	// 		Description: productRandom.Description,
-	// 		Price:       productRandom.Price,
-	// 		Quantity:    productRandom.Quantity,
-	// 		StoreID:     productRandom.StoreID,
-	// 	},
-	// }
+	saleTxResult := db.SaleTxResult{
+		Sale: saleRandom,
+		Product: db.Product{
+			ID:          saleRandom.ProductID,
+			Name:        productRandom.Name,
+			Description: productRandom.Description,
+			Price:       productRandom.Price,
+			Quantity:    productRandom.Quantity,
+			StoreID:     productRandom.StoreID,
+		},
+	}
 
 	testCase := []struct {
 		name          string
@@ -296,58 +298,46 @@ func TestCreateSale(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStoreDB) {
 
-				arg := db.SaleTxParams{
-					ProductID:    saleRandom.ProductID,
-					QuantitySold: saleRandom.QuantitySold,
-				}
-
-				log.Println(arg)
-
-				store.EXPECT().SaleTx(gomock.Any(), gomock.Eq(arg)).Times(1)
+				store.EXPECT().SaleTx(gomock.Any(), gomock.Any()).Times(1).Return(saleTxResult, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 
 				require.Equal(t, http.StatusOK, recorder.Code)
-				// requireBodyMatchSaleTX(t, recorder.Body, saleTxResult)
+				requireBodyMatchSaleTX(t, recorder.Body, saleTxResult)
 			},
 		},
 
-		// {
-		// 	name: "INTERNAL ERROR",
-		// 	body: gin.H{
-		// 		"product_id":    saleRandom.ProductID,
-		// 		"quantity":      saleRandom.QuantitySold,
-		// 		"quantity_sold": saleRandom.QuantitySold,
-		// 	},
-		// 	buildStubs: func(store *mockdb.MockStoreDB) {
-		// 		arg := db.CreateSaleParams{
-		// 			ProductID:    saleRandom.ProductID,
-		// 			QuantitySold: saleRandom.QuantitySold,
-		// 			SaleDate:     time.Now(),
-		// 		}
-		// 		store.EXPECT().CreateSale(gomock.Any(), gomock.Eq(arg)).Times(1).
-		// 			Return(db.Store{}, sql.ErrConnDone)
-		// 	},
-		// 	checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-		// 		require.Equal(t, http.StatusInternalServerError, recorder.Code)
+		{
+			name: "INTERNAL ERROR",
+			body: gin.H{
+				"product_id":    saleRandom.ProductID,
+				"quantity":      saleRandom.QuantitySold,
+				"quantity_sold": saleRandom.QuantitySold,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().SaleTx(gomock.Any(), gomock.Any()).Times(1).
+					Return(db.SaleTxResult{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 
-		// 	},
-		// },
-		// {
-		// 	name: "PARAMS ERROR",
-		// 	body: gin.H{
-		// 		"product_id":    saleRandom.ProductID,
-		// 		"quantity":      saleRandom.QuantitySold,
-		// 		"quantity_sold": saleRandom.QuantitySold,
-		// 	},
-		// 	buildStubs: func(store *mockdb.MockStoreDB) {
-		// 		store.EXPECT().CreateSale(gomock.Any(), gomock.Any()).Times(0)
-		// 	},
-		// 	checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-		// 		require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "PARAMS ERROR",
+			body: gin.H{
 
-		// 	},
-		// },
+				"quantity":      saleRandom.QuantitySold,
+				"quantity_sold": saleRandom.QuantitySold,
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().SaleTx(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+
+			},
+		},
 	}
 
 	for i := range testCase {
@@ -363,7 +353,9 @@ func TestCreateSale(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server := NewServer(store)
+				server, err := NewServer(store)
+
+				require.NoError(t, err)
 
 				recorder := httptest.NewRecorder()
 

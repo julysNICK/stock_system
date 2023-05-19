@@ -179,8 +179,8 @@ type loginStoreRequest struct {
 }
 
 type loginStoreResponse struct {
-	AccessToken string    `json:"access_token"`
-	Store       *db.Store `json:"store"`
+	AccessToken string   `json:"access_token"`
+	Store       db.Store `json:"store"`
 }
 
 func (server *Server) LoginStore(ctx *gin.Context) {
@@ -191,7 +191,7 @@ func (server *Server) LoginStore(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.GetStoreByEmail(ctx, loginReq.Email)
+	store, err := server.store.GetStoreByEmail(ctx, loginReq.Email)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -202,7 +202,7 @@ func (server *Server) LoginStore(ctx *gin.Context) {
 		return
 	}
 
-	err = utils.CheckPassword(loginReq.Password, user.HashedPassword)
+	err = utils.CheckPassword(loginReq.Password, store.HashedPassword)
 
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -211,7 +211,7 @@ func (server *Server) LoginStore(ctx *gin.Context) {
 
 	duration := time.Now().Add(time.Hour * 24 * 7).Unix()
 
-	accessToken, _, err := server.token.CreateToken(user.ID, time.Duration(duration))
+	accessToken, _, err := server.token.CreateToken(store.Name, time.Duration(duration))
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -220,7 +220,7 @@ func (server *Server) LoginStore(ctx *gin.Context) {
 
 	rsp := loginStoreResponse{
 		AccessToken: accessToken,
-		Store:       user,
+		Store:       store,
 	}
 
 	ctx.JSON(http.StatusOK, rsp)

@@ -213,6 +213,21 @@ func (mr *MockStoreDBMockRecorder) GetStore(arg0, arg1 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStore", reflect.TypeOf((*MockStoreDB)(nil).GetStore), arg0, arg1)
 }
 
+// GetStoreByEmail mocks base method.
+func (m *MockStoreDB) GetStoreByEmail(arg0 context.Context, arg1 string) (db.Store, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStoreByEmail", arg0, arg1)
+	ret0, _ := ret[0].(db.Store)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStoreByEmail indicates an expected call of GetStoreByEmail.
+func (mr *MockStoreDBMockRecorder) GetStoreByEmail(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStoreByEmail", reflect.TypeOf((*MockStoreDB)(nil).GetStoreByEmail), arg0, arg1)
+}
+
 // GetStoreForUpdate mocks base method.
 func (m *MockStoreDB) GetStoreForUpdate(arg0 context.Context, arg1 int64) (db.Store, error) {
 	m.ctrl.T.Helper()
