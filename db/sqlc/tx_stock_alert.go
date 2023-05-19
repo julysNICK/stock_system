@@ -23,7 +23,7 @@ type StockAlertTxResult struct {
 	Supplier   Supplier   `json:"supplier"`
 }
 
-func (store *StoreDB) StockAlertTx(ctx context.Context, arg StockAlertTxParams) (StockAlertTxResult, error) {
+func (store *SQLStore) StockAlertTx(ctx context.Context, arg StockAlertTxParams) (StockAlertTxResult, error) {
 	var result StockAlertTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {

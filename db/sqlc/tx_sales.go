@@ -17,7 +17,7 @@ type SaleTxResult struct {
 	Product Product `json:"product"`
 }
 
-func (store *StoreDB) SaleTx(ctx context.Context, arg SaleTxParams) (SaleTxResult, error) {
+func (store *SQLStore) SaleTx(ctx context.Context, arg SaleTxParams) (SaleTxResult, error) {
 	var result SaleTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {

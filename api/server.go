@@ -6,12 +6,20 @@ import (
 )
 
 type Server struct {
-	store  *db.StoreDB
+	store  db.StoreDB
 	router *gin.Engine
 }
 
-func NewServer(store *db.StoreDB) *Server {
+func NewServer(store db.StoreDB) *Server {
 	server := &Server{store: store}
+
+	server.setupRouter()
+
+	return server
+
+}
+
+func (server *Server) setupRouter() {
 
 	router := gin.Default()
 
@@ -35,10 +43,17 @@ func NewServer(store *db.StoreDB) *Server {
 	router.POST("/products", server.CreateProduct)
 	router.PATCH("/products/:product_id", server.UpdateProduct)
 
+	router.POST("/sales", server.CreateSale)
+	router.GET("/sales/:sale_id", server.GetSale)
+	router.GET("/sales", server.ListSales)
+	router.DELETE("/sales/:sale_id", server.DeleteSale)
+
+	router.POST("/stock_alerts", server.CreateStockAlert)
+	router.GET("/stock_alerts/:stock_alert_id", server.GetStockAlert)
+	router.PATCH("/stock_alerts/:stock_alert_id", server.UpdateStockAlert)
+	router.DELETE("/stock_alerts/:stock_alert_id", server.DeleteStockAlert)
+
 	server.router = router
-
-	return server
-
 }
 
 func (server *Server) Start(address string) error {

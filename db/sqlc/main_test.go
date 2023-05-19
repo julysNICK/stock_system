@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	_ "github.com/golang/mock/mockgen/model"
 	_ "github.com/lib/pq"
 )
 
@@ -13,7 +14,6 @@ const (
 	dbDriver = "postgres"
 	dbSource = "postgresql://root:secret@localhost:5432/stock_system?sslmode=disable"
 )
-
 
 var testQueries *Queries
 

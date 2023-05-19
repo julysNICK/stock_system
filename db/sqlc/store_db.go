@@ -6,20 +6,26 @@ import (
 	"fmt"
 )
 
-
-type StoreDB struct {
-	db *sql.DB
-	*Queries
+type StoreDB interface {
+	Querier
+	 SaleTx(ctx context.Context, arg SaleTxParams) (SaleTxResult, error)
+	 StockAlertTx(ctx context.Context, arg StockAlertTxParams) (StockAlertTxResult, error)
+	 ProductTx(ctx context.Context, arg ProductTxParams) (ProductTxResult, error)
 }
 
-func NewStoreDB(db *sql.DB) *StoreDB {
-	return &StoreDB{
+type SQLStore struct {
+	*Queries
+	db *sql.DB
+}
+
+func NewStoreDB(db *sql.DB) StoreDB {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db), // this New() is for the queries we defined in sqlc
 	}
-}	
+}
 
-func (store *StoreDB) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -34,10 +40,3 @@ func (store *StoreDB) execTx(ctx context.Context, fn func(*Queries) error) error
 	}
 	return tx.Commit()
 }
-
-
-
-
-
-
-

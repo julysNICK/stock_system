@@ -18,7 +18,7 @@ type ProductTxResult struct {
 	StoreID Store   `json:"store_id"`
 }
 
-func (store *StoreDB) ProductTx(ctx context.Context, arg ProductTxParams) (ProductTxResult, error) {
+func (store *SQLStore) ProductTx(ctx context.Context, arg ProductTxParams) (ProductTxResult, error) {
 	var result ProductTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
