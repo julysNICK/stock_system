@@ -1,9 +1,11 @@
 DB_URL=postgresql://root:secret@localhost:5432/stock_system?sslmode=disable
 network:
-	docker network create stock-system
+	sudo docker network create stock-system
+clearforup:
+	sudo docker rm stock_system-api-1 && sudo docker rm stock_system-postgres-1 && sudo docker rmi stock_system-api
 
 postgres:
-	docker run --name postgres_stock_system --network stock-system -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres
+	sudo docker run --name postgres_stock_system --network stock-system -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres
 
 createdb:
 	docker exec -it postgres_stock_system createdb --username=root --owner=root stock_system
@@ -33,4 +35,4 @@ server:
 
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/julysNICK/stock_system/db/sqlc StoreDB
-.PHONY: postgres createdb dropdb migrateup migratedown new_migration initdocker sqlc test server
+.PHONY: network clearforup postgres createdb dropdb migrateup migratedown new_migration initdocker sqlc test server
