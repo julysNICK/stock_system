@@ -1,6 +1,9 @@
 DB_URL=postgresql://root:secret@localhost:5432/stock_system?sslmode=disable
+network:
+	docker network create stock-system
+
 postgres:
-	docker run --name postgres_stock_system -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres
+	docker run --name postgres_stock_system --network stock-system -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres
 
 createdb:
 	docker exec -it postgres_stock_system createdb --username=root --owner=root stock_system
