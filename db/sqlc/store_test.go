@@ -10,7 +10,8 @@ import (
 )
 
 func CreateRandomStore(t *testing.T) Store {
-	hashedPassword := utils.RandomPassword()
+	hashedPassword, err := utils.HashedPassword(utils.RandomString(10))
+	require.NoError(t, err)
 	require.NotEmpty(t, hashedPassword)
 
 	arg := CreateStoreParams{

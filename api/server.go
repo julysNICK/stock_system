@@ -3,11 +3,13 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	db "github.com/julysNICK/stock_system/db/sqlc"
+	"github.com/julysNICK/stock_system/token"
 )
 
 type Server struct {
 	store  db.StoreDB
 	router *gin.Engine
+	token  token.Maker
 }
 
 func NewServer(store db.StoreDB) *Server {

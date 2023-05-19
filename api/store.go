@@ -3,9 +3,11 @@ package api
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/julysNICK/stock_system/db/sqlc"
+	"github.com/julysNICK/stock_system/utils"
 )
 
 type CreateStoreRequest struct {
@@ -24,12 +26,19 @@ func (server *Server) CreateStore(ctx *gin.Context) {
 		return
 	}
 
+	hash, err := utils.HashedPassword(req.HashedPassword)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	arg := db.CreateStoreParams{
 		Name:           req.Name,
 		Address:        req.Address,
 		ContactEmail:   req.ContactEmail,
 		ContactPhone:   req.ContactPhone,
-		HashedPassword: req.HashedPassword,
+		HashedPassword: hash,
 	}
 
 	store, err := server.store.CreateStore(ctx, arg)
@@ -162,4 +171,58 @@ func (server *Server) UpdateStore(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, store)
+}
+
+type loginStoreRequest struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type loginStoreResponse struct {
+	AccessToken string    `json:"access_token"`
+	Store       *db.Store `json:"store"`
+}
+
+func (server *Server) LoginStore(ctx *gin.Context) {
+	var loginReq loginStoreRequest
+
+	if err := ctx.ShouldBindJSON(&loginReq); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	user, err := server.store.GetStoreByEmail(ctx, loginReq.Email)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = utils.CheckPassword(loginReq.Password, user.HashedPassword)
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	duration := time.Now().Add(time.Hour * 24 * 7).Unix()
+
+	accessToken, _, err := server.token.CreateToken(user.ID, time.Duration(duration))
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := loginStoreResponse{
+		AccessToken: accessToken,
+		Store:       user,
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
+
 }
