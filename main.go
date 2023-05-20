@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	_ "github.com/golang/mock/mockgen/model"
 	"github.com/julysNICK/stock_system/api"
+	"github.com/julysNICK/stock_system/cron"
 	db "github.com/julysNICK/stock_system/db/sqlc"
 	_ "github.com/lib/pq"
 )
@@ -28,6 +30,14 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot create server: ", err)
 	}
+
+	go func() {
+		for {
+			cron.CheckStockAlerts(store)
+
+			time.Sleep(1 * time.Minute)
+		}
+	}()
 
 	err = server.Start(ServerAddress)
 
