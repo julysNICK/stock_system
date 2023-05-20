@@ -46,12 +46,12 @@ func (server *Server) setupRouter() {
 	})
 	router.GET("/stores/login", server.LoginStore)
 	router.GET("/stores", server.ListStores)
+	router.PATCH("/stores/:store_id", server.UpdateStore)
+	router.POST("/stores", server.CreateStore)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.token))
 
-	authRoutes.POST("/stores", server.CreateStore)
 	authRoutes.GET("/stores/:store_id", server.GetStore)
-	authRoutes.PATCH("/stores/:store_id", server.UpdateStore)
 
 	authRoutes.POST("/suppliers", server.CreateSupplier)
 	authRoutes.GET("/suppliers/:supplier_id", server.GetSupplier)

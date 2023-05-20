@@ -109,11 +109,11 @@ func (server *Server) ListStores(ctx *gin.Context) {
 }
 
 type UpdateStoreRequest struct {
-	Name           string `json:"name" binding:"required"`
-	Address        string `json:"address" binding:"required"`
-	ContactEmail   string `json:"contact_email" binding:"required"`
-	ContactPhone   string `json:"contact_phone" binding:"required"`
-	HashedPassword string `json:"hashed_password" binding:"required"`
+	Name           string `json:"name,omitempty"`
+	Address        string `json:"address,omitempty"`
+	ContactEmail   string `json:"contact_email,omitempty"`
+	ContactPhone   string `json:"contact_phone,omitempty"`
+	HashedPassword string `json:"hashed_password,omitempty"`
 }
 
 type UpdateStoreRequestUri struct {
@@ -139,24 +139,24 @@ func (server *Server) UpdateStore(ctx *gin.Context) {
 		ID: reqUri.StoreID,
 		Name: sql.NullString{
 			String: req.Name,
-			Valid:  true,
+			Valid:  req.Name != "",
 		},
 		Address: sql.NullString{
 			String: req.Address,
-			Valid:  true,
+			Valid:  req.Address != "",
 		},
 
 		ContactEmail: sql.NullString{
 			String: req.ContactEmail,
-			Valid:  true,
+			Valid:  req.ContactEmail != "",
 		},
 		ContactPhone: sql.NullString{
 			String: req.ContactPhone,
-			Valid:  true,
+			Valid:  req.ContactPhone != "",
 		},
 		HashedPassword: sql.NullString{
 			String: req.HashedPassword,
-			Valid:  true,
+			Valid:  req.HashedPassword != "",
 		},
 	}
 

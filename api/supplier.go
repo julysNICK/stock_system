@@ -65,10 +65,10 @@ func (server *Server) GetSupplier(ctx *gin.Context) {
 }
 
 type UpdateSupplierRequest struct {
-	Name         string `json:"name" binding:"required"`
-	Address      string `json:"address" binding:"required"`
-	Email        string `json:"email" binding:"required"`
-	ContactPhone string `json:"contact_phone" binding:"required"`
+	Name         string `json:"name,omitempty"`
+	Address      string `json:"address,omitempty"`
+	Email        string `json:"email,omitempty"`
+	ContactPhone string `json:"contact_phone,omitempty"`
 }
 
 type UpdateSupplierRequestUri struct {
@@ -94,22 +94,22 @@ func (server *Server) UpdateSupplier(ctx *gin.Context) {
 		ID: reqUri.SupplierId,
 		Name: sql.NullString{
 			String: req.Name,
-			Valid:  true,
+			Valid:  req.Name != "",
 		},
 
 		Address: sql.NullString{
 			String: req.Address,
-			Valid:  true,
+			Valid:  req.Address != "",
 		},
 
 		Email: sql.NullString{
 			String: req.Email,
-			Valid:  true,
+			Valid:  req.Email != "",
 		},
 
 		ContactPhone: sql.NullString{
 			String: req.ContactPhone,
-			Valid:  true,
+			Valid:  req.ContactPhone != "",
 		},
 	}
 
