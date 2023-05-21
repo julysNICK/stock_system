@@ -86,7 +86,7 @@ func TestAuthMiddleware(t *testing.T) {
 		t.Run(
 			tc.name,
 			func(t *testing.T) {
-				server := newTestServer(t, nil)
+				server := NewTestServer(t, nil)
 
 				authPath := "/auth"
 

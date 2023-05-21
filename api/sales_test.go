@@ -175,9 +175,7 @@ func TestDeleteProduct(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server, err := NewServer(store)
-
-				require.NoError(t, err)
+				server := NewTestServer(t,store)
 
 				recorder := httptest.NewRecorder()
 
@@ -283,9 +281,7 @@ func TestGetSales(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server, err := NewServer(store)
-
-				require.NoError(t, err)
+			server := NewTestServer(t,store)
 
 				recorder := httptest.NewRecorder()
 
@@ -396,9 +392,9 @@ func TestCreateSale(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server, err := NewServer(store)
+				server := NewTestServer(t,store)
 
-				require.NoError(t, err)
+		
 
 				recorder := httptest.NewRecorder()
 

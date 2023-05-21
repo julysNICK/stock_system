@@ -203,10 +203,7 @@ func TestGetStore(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server, err := NewServer(store)
-
-				require.NoError(t, err)
-
+			server := NewTestServer(t,store)
 				recorder := httptest.NewRecorder()
 
 				url := fmt.Sprintf("/stores/%d", tc.AccountId)
@@ -448,9 +445,7 @@ func TestUpdateStore(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server, err := NewServer(store)
-
-				require.NoError(t, err)
+				server := NewTestServer(t,store)
 
 				recorder := httptest.NewRecorder()
 				data, err := json.Marshal(tc.body)
@@ -567,9 +562,7 @@ func TestCreateStore(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server, err := NewServer(store)
-
-				require.NoError(t, err)
+		server := NewTestServer(t,store)
 
 				recorder := httptest.NewRecorder()
 
@@ -656,9 +649,7 @@ func TestListStore(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server, err := NewServer(store)
-
-				require.NoError(t, err)
+				server := NewTestServer(t,store)
 
 				recorder := httptest.NewRecorder()
 

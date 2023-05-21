@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	db "github.com/julysNICK/stock_system/db/sqlc"
 	"github.com/julysNICK/stock_system/token"
+	"github.com/julysNICK/stock_system/utils"
 )
 
 const (
@@ -13,12 +14,14 @@ const (
 )
 
 type Server struct {
+	config utils.Config
 	store  db.StoreDB
 	router *gin.Engine
 	token  token.Maker
 }
 
-func NewServer(store db.StoreDB) (*Server, error) {
+
+func NewServer(config utils.Config, store db.StoreDB) (*Server, error) {
 	tokenMaker, err := token.NewJwtMaker(secretKey)
 
 	if err != nil {
@@ -26,6 +29,7 @@ func NewServer(store db.StoreDB) (*Server, error) {
 	}
 
 	server := &Server{
+		config: config,
 		token: tokenMaker,
 		store: store}
 
