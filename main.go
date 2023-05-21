@@ -12,11 +12,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	DBDrive       = "postgres"
-	DBURL         = "postgresql://root:secret@localhost:5432/stock_system?sslmode=disable"
-	ServerAddress = "localhost:8080"
-)
 
 func main() {
 	config, err := utils.LoadConfig(".")
@@ -28,7 +23,7 @@ func main() {
 
 
 
-	conn, err := sql.Open(DBDrive, DBURL)
+	conn, err := sql.Open(config.DBDriver, config.DB_URL)
 	if err != nil {
 		log.Fatal("cannot connect to db: ", err)
 	}
@@ -48,7 +43,7 @@ func main() {
 	// 	}
 	// }()
 
-	err = server.Start(ServerAddress)
+	err = server.Start(config.HTTP_SERVER_ADDRESS)
 
 	if err != nil {
 		log.Fatal("cannot start server: ", err)

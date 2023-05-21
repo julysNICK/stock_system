@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	DBDriver             string        `mapstructure:"DB_DRIVER"`
+	DB_URL 					 string        `mapstructure:"DB_URL"`
 	DBSource             string        `mapstructure:"DB_SOURCE"`
 	HTTP_SERVER_ADDRESS         string        `mapstructure:"HTTP_SERVER_ADDRESS"`
 	TOKEN_SYMMETRIC_KEY    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
