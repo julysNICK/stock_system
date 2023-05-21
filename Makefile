@@ -19,6 +19,9 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "$(DB_URL)" -verbose down
 
+migrateup1:
+	migrate -path db/migration -database "$(DB_URL)" -verbose up 1
+
 new_migration:
 	migrate create -ext sql -dir db/migration -seq $(name)
 
@@ -35,4 +38,4 @@ server:
 
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/julysNICK/stock_system/db/sqlc StoreDB
-.PHONY: network clearforup postgres createdb dropdb migrateup migratedown new_migration initdocker sqlc test server
+.PHONY: network clearforup postgres createdb dropdb migrateup migratedown migrateup1 new_migration initdocker sqlc test server 

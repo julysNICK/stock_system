@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	db "github.com/julysNICK/stock_system/db/sqlc"
 	"github.com/julysNICK/stock_system/utils"
 )
@@ -179,8 +180,12 @@ type loginStoreRequest struct {
 }
 
 type loginStoreResponse struct {
-	AccessToken string   `json:"access_token"`
-	Store       db.Store `json:"store"`
+	SessionId             uuid.UUID `json:"session_id"`
+	AccessToken           string    `json:"access_token"`
+	AccessTokenExpiresAt  time.Time `json:"access_token_expires_at"`
+	RefreshToken          string    `json:"refresh_token"`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
+	Store                 db.Store  `json:"store"`
 }
 
 func (server *Server) LoginStore(ctx *gin.Context) {
@@ -211,7 +216,29 @@ func (server *Server) LoginStore(ctx *gin.Context) {
 
 	duration := time.Now().Add(time.Hour * 24 * 7).Unix()
 
-	accessToken, _, err := server.token.CreateToken(store.Name, time.Duration(duration))
+	accessToken, accessPayload, err := server.token.CreateToken(store.Name, time.Duration(duration))
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	refreshToken, refreshPayload, err := server.token.CreateToken(store.Name, time.Duration(duration))
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           refreshPayload.ID,
+		IDStore:      store.ID,
+		RefreshToken: refreshToken,
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIp:     ctx.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    refreshPayload.ExpiredAt,
+	})
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -219,8 +246,12 @@ func (server *Server) LoginStore(ctx *gin.Context) {
 	}
 
 	rsp := loginStoreResponse{
-		AccessToken: accessToken,
-		Store:       store,
+		SessionId:             session.ID,
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		Store:                 store,
 	}
 
 	ctx.JSON(http.StatusOK, rsp)

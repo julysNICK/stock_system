@@ -6,11 +6,14 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
 	CreateSale(ctx context.Context, arg CreateSaleParams) (Sale, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateStockAlert(ctx context.Context, arg CreateStockAlertParams) (StockAlert, error)
 	CreateStore(ctx context.Context, arg CreateStoreParams) (Store, error)
 	CreateSupplier(ctx context.Context, arg CreateSupplierParams) (Supplier, error)
@@ -19,6 +22,7 @@ type Querier interface {
 	GetProduct(ctx context.Context, id int64) (Product, error)
 	GetProductForUpdate(ctx context.Context, id int64) (Product, error)
 	GetSale(ctx context.Context, id int64) (Sale, error)
+	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetStockAlert(ctx context.Context, id int64) (StockAlert, error)
 	GetStockAlertsByProductIdAndSupplierId(ctx context.Context, arg GetStockAlertsByProductIdAndSupplierIdParams) ([]StockAlert, error)
 	GetStore(ctx context.Context, id int64) (Store, error)
