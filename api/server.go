@@ -44,13 +44,13 @@ func (server *Server) setupRouter() {
 			"message": "Hello World!",
 		})
 	})
-	router.GET("/stores/login", server.LoginStore)
+	router.POST("/stores/login", server.LoginStore)
 	router.GET("/stores", server.ListStores)
-	router.PATCH("/stores/:store_id", server.UpdateStore)
 	router.POST("/stores", server.CreateStore)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.token))
 
+	authRoutes.PATCH("/stores/:store_id", server.UpdateStore)
 	authRoutes.GET("/stores/:store_id", server.GetStore)
 
 	authRoutes.POST("/suppliers", server.CreateSupplier)
