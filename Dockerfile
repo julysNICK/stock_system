@@ -9,13 +9,14 @@ FROM alpine:3.17
 WORKDIR /app
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrate ./migrate
+COPY app.env .
 COPY start.sh .
-# COPY cron-script.sh .
 COPY wait-for.sh .
-RUN chmod +x start.sh
 RUN chmod +x wait-for.sh
+RUN chmod +x start.sh
+COPY db/migration ./migration
+# COPY cron-script.sh .
 # RUN chmod +x cron-script.sh
-COPY db/migration ./db/migration
 
 EXPOSE 8080
 CMD ["/app/main"]

@@ -146,7 +146,7 @@ func TestDeleteProduct(t *testing.T) {
 		},
 
 		{
-			name:   "PARAMS ERROR Uri",
+			name:   "PARAMS ERROR URI",
 			SaleId: 0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)

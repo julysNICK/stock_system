@@ -9,9 +9,7 @@ import (
 	"github.com/julysNICK/stock_system/utils"
 )
 
-const (
-	secretKey = "secrettestkey"
-)
+
 
 type Server struct {
 	config utils.Config
@@ -22,7 +20,7 @@ type Server struct {
 
 
 func NewServer(config utils.Config, store db.StoreDB) (*Server, error) {
-	tokenMaker, err := token.NewJwtMaker(secretKey)
+	tokenMaker, err := token.NewJwtMaker(config.TOKEN_SYMMETRIC_KEY)
 
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)

@@ -1,17 +1,23 @@
 DB_URL=postgresql://root:secret@localhost:5432/stock_system?sslmode=disable
 network:
-	sudo docker network create stock-system
+	sudo docker network create stock-system-network
 clearforup:
 	sudo docker rm stock_system-api-1 && sudo docker rm stock_system-postgres-1 && sudo docker rmi stock_system-api
 
+dockerbuild:
+	sudo docker build -t stock_system:latest .
+
+dockefilerun:
+	sudo docker run --name stock_system --network stock-system-network -p 8080:8080 -e GIN_MODE=release -e DB_URL="postgresql://root:secret@postgres_stock_system:5432/stock_system?sslmode=disable" stock_system:latest 
+
 postgres:
-	sudo docker run --name postgres_stock_system --network stock-system -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres
+	sudo docker run --name postgres_stock_system --network stock-system-network -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres
 
 createdb:
-	docker exec -it postgres_stock_system createdb --username=root --owner=root stock_system
+	sudo docker exec -it postgres_stock_system createdb --username=root --owner=root stock_system
 
 dropdb:
-	docker exec -it postgres_stock_system dropdb stock_system
+	sudo docker exec -it postgres_stock_system dropdb stock_system
 
 migrateup:
 	migrate -path db/migration -database "$(DB_URL)" -verbose up
