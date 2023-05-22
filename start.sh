@@ -2,7 +2,8 @@
 
 set -e 
 
-echo "run db migrations" /app/migrate -path /app/migration -database "postgresql://root:secret@localhost:5432/stock_system?sslmode=disable" -verbose up
+echo "run db migrations" 
+/app/migrate -path /app/migration -database "$DB_URL" -verbose up
 
 echo "start the app" 
 
