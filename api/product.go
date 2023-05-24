@@ -86,6 +86,9 @@ type listProductsRequest struct {
 	Limit  int32 `form:"limit" binding:"required,min=5,max=10"`
 }
 
+
+
+
 func (server *Server) ListProducts(ctx *gin.Context) {
 	var req listProductsRequest
 
@@ -94,12 +97,12 @@ func (server *Server) ListProducts(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListProductsParams{
+	arg := db.GetProductsWithJoinWithStoreParams{
 		Limit:  req.Limit,
 		Offset: (req.PageID - 1) * req.Limit,
 	}
 
-	products, err := server.store.ListProducts(ctx, arg)
+	products, err := server.store.GetProductsWithJoinWithStore(ctx, arg)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

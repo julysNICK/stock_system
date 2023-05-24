@@ -184,6 +184,21 @@ func (mr *MockStoreDBMockRecorder) GetProductForUpdate(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductForUpdate", reflect.TypeOf((*MockStoreDB)(nil).GetProductForUpdate), arg0, arg1)
 }
 
+// GetProductsWithJoinWithStore mocks base method.
+func (m *MockStoreDB) GetProductsWithJoinWithStore(arg0 context.Context, arg1 db.GetProductsWithJoinWithStoreParams) ([]db.GetProductsWithJoinWithStoreRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductsWithJoinWithStore", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetProductsWithJoinWithStoreRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductsWithJoinWithStore indicates an expected call of GetProductsWithJoinWithStore.
+func (mr *MockStoreDBMockRecorder) GetProductsWithJoinWithStore(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsWithJoinWithStore", reflect.TypeOf((*MockStoreDB)(nil).GetProductsWithJoinWithStore), arg0, arg1)
+}
+
 // GetSale mocks base method.
 func (m *MockStoreDB) GetSale(arg0 context.Context, arg1 int64) (db.Sale, error) {
 	m.ctrl.T.Helper()

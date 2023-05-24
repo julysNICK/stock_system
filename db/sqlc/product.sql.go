@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const createProduct = `-- name: CreateProduct :one
@@ -87,6 +88,73 @@ func (q *Queries) GetProductForUpdate(ctx context.Context, id int64) (Product, e
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getProductsWithJoinWithStore = `-- name: GetProductsWithJoinWithStore :many
+  SELECT products.id, products.name, products.description, products.price, products.quantity, products.store_id, products.created_at, stores.id, stores.name, stores.address, stores.contact_email, stores.contact_phone, stores.hashed_password, stores.created_at FROM products INNER JOIN stores ON products.store_id = stores.id 
+  ORDER BY products.id
+  LIMIT $1
+  OFFSET $2
+`
+
+type GetProductsWithJoinWithStoreParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type GetProductsWithJoinWithStoreRow struct {
+	ID             int64     `json:"id"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	Price          string    `json:"price"`
+	Quantity       int32     `json:"quantity"`
+	StoreID        int64     `json:"storeID"`
+	CreatedAt      time.Time `json:"createdAt"`
+	ID_2           int64     `json:"id2"`
+	Name_2         string    `json:"name2"`
+	Address        string    `json:"address"`
+	ContactEmail   string    `json:"contactEmail"`
+	ContactPhone   string    `json:"contactPhone"`
+	HashedPassword string    `json:"hashedPassword"`
+	CreatedAt_2    time.Time `json:"createdAt2"`
+}
+
+func (q *Queries) GetProductsWithJoinWithStore(ctx context.Context, arg GetProductsWithJoinWithStoreParams) ([]GetProductsWithJoinWithStoreRow, error) {
+	rows, err := q.db.QueryContext(ctx, getProductsWithJoinWithStore, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetProductsWithJoinWithStoreRow{}
+	for rows.Next() {
+		var i GetProductsWithJoinWithStoreRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Price,
+			&i.Quantity,
+			&i.StoreID,
+			&i.CreatedAt,
+			&i.ID_2,
+			&i.Name_2,
+			&i.Address,
+			&i.ContactEmail,
+			&i.ContactPhone,
+			&i.HashedPassword,
+			&i.CreatedAt_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listProducts = `-- name: ListProducts :many

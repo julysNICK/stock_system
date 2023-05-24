@@ -30,3 +30,10 @@ quantity = COALESCE(sqlc.narg(quantity), quantity)
 WHERE id = $1
 RETURNING *;
 
+-- name: GetProductsWithJoinWithStore :many
+  SELECT products.*, stores.* FROM products INNER JOIN stores ON products.store_id = stores.id 
+  ORDER BY products.id
+  LIMIT $1
+  OFFSET $2;
+
+

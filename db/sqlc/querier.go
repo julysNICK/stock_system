@@ -21,6 +21,7 @@ type Querier interface {
 	DeleteStockAlert(ctx context.Context, id int64) error
 	GetProduct(ctx context.Context, id int64) (Product, error)
 	GetProductForUpdate(ctx context.Context, id int64) (Product, error)
+	GetProductsWithJoinWithStore(ctx context.Context, arg GetProductsWithJoinWithStoreParams) ([]GetProductsWithJoinWithStoreRow, error)
 	GetSale(ctx context.Context, id int64) (Sale, error)
 	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetStockAlert(ctx context.Context, id int64) (StockAlert, error)
