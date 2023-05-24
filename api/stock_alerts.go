@@ -83,7 +83,7 @@ func (server *Server) DeleteStockAlert(ctx *gin.Context) {
 }
 
 type UpdateStockAlertRequest struct {
-	AlertQuantity int64 `json:"alert_quantity" binding:"required,min=1"`
+	AlertQuantity int64 `json:"alert_quantity,omitempty" binding:"min=1"`
 }
 type UpdateStockAlertRequestUri struct {
 	StockAlertID int64 `uri:"stock_alert_id" binding:"required,min=1"`
@@ -107,7 +107,7 @@ func (server *Server) UpdateStockAlert(ctx *gin.Context) {
 		ID: reqUri.StockAlertID,
 		AlertQuantity: sql.NullInt32{
 			Int32: int32(req.AlertQuantity),
-			Valid: true,
+			Valid: req.AlertQuantity != 0,
 		},
 	}
 

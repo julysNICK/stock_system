@@ -27,3 +27,61 @@ func TestStockAlert(t *testing.T) {
 
 	require.NotEmpty(t, arg.StockAlert)
 }
+
+func TestGetStocksAlert(t *testing.T) {
+
+	store := NewStoreDB(testDb)
+	storeRandom := CreateRandomStockAlert(t)
+
+	arg, err := store.GetStockAlertsByIdAndBySupplierTx(context.Background(), GetStockAlertTxsParams{
+		ProductID:  storeRandom.ProductID.Int64,
+		SupplierID: storeRandom.SupplierID.Int64,
+	})
+
+	require.NoError(t, err)
+
+	require.NotEmpty(t, arg.StocksAlert)
+}
+func TestGetStocksAlertErrorNotFoundProduct(t *testing.T) {
+
+	store := NewStoreDB(testDb)
+	storeRandom := CreateRandomStockAlert(t)
+
+	arg, err := store.GetStockAlertsByIdAndBySupplierTx(context.Background(), GetStockAlertTxsParams{
+		ProductID:  0,
+		SupplierID: storeRandom.SupplierID.Int64,
+	})
+
+	require.Error(t, err)
+
+	require.Empty(t, arg.StocksAlert)
+}
+
+func TestGetStocksAlertErrorNotFoundSupplier(t *testing.T) {
+
+	store := NewStoreDB(testDb)
+	storeRandom := CreateRandomStockAlert(t)
+
+	arg, err := store.GetStockAlertsByIdAndBySupplierTx(context.Background(), GetStockAlertTxsParams{
+		ProductID:  storeRandom.ProductID.Int64,
+		SupplierID: 0,
+	})
+
+	require.Error(t, err)
+
+	require.Empty(t, arg.StocksAlert)
+}
+func TestGetStocksAlertErrorNotFoundSupplierAll(t *testing.T) {
+
+	store := NewStoreDB(testDb)
+	storeRandom := CreateRandomStockAlert(t)
+
+	arg, err := store.GetStockAlertsByIdAndBySupplierTx(context.Background(), GetStockAlertTxsParams{
+		ProductID:  storeRandom.ProductID.Int64,
+		SupplierID: storeRandom.SupplierID.Int64,
+	})
+
+	require.NoError(t, err)
+
+	require.NotEmpty(t, arg.StocksAlert)
+}

@@ -3,9 +3,12 @@ package api
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	db "github.com/julysNICK/stock_system/db/sqlc"
+	"github.com/julysNICK/stock_system/utils"
 )
 
 type CreateStoreRequest struct {
@@ -24,12 +27,19 @@ func (server *Server) CreateStore(ctx *gin.Context) {
 		return
 	}
 
+	hash, err := utils.HashedPassword(req.HashedPassword)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	arg := db.CreateStoreParams{
 		Name:           req.Name,
 		Address:        req.Address,
 		ContactEmail:   req.ContactEmail,
 		ContactPhone:   req.ContactPhone,
-		HashedPassword: req.HashedPassword,
+		HashedPassword: hash,
 	}
 
 	store, err := server.store.CreateStore(ctx, arg)
@@ -100,11 +110,11 @@ func (server *Server) ListStores(ctx *gin.Context) {
 }
 
 type UpdateStoreRequest struct {
-	Name           string `json:"name" binding:"required"`
-	Address        string `json:"address" binding:"required"`
-	ContactEmail   string `json:"contact_email" binding:"required"`
-	ContactPhone   string `json:"contact_phone" binding:"required"`
-	HashedPassword string `json:"hashed_password" binding:"required"`
+	Name           string `json:"name,omitempty"`
+	Address        string `json:"address,omitempty"`
+	ContactEmail   string `json:"contact_email,omitempty"`
+	ContactPhone   string `json:"contact_phone,omitempty"`
+	HashedPassword string `json:"hashed_password,omitempty"`
 }
 
 type UpdateStoreRequestUri struct {
@@ -130,24 +140,24 @@ func (server *Server) UpdateStore(ctx *gin.Context) {
 		ID: reqUri.StoreID,
 		Name: sql.NullString{
 			String: req.Name,
-			Valid:  true,
+			Valid:  req.Name != "",
 		},
 		Address: sql.NullString{
 			String: req.Address,
-			Valid:  true,
+			Valid:  req.Address != "",
 		},
 
 		ContactEmail: sql.NullString{
 			String: req.ContactEmail,
-			Valid:  true,
+			Valid:  req.ContactEmail != "",
 		},
 		ContactPhone: sql.NullString{
 			String: req.ContactPhone,
-			Valid:  true,
+			Valid:  req.ContactPhone != "",
 		},
 		HashedPassword: sql.NullString{
 			String: req.HashedPassword,
-			Valid:  true,
+			Valid:  req.HashedPassword != "",
 		},
 	}
 
@@ -162,4 +172,88 @@ func (server *Server) UpdateStore(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, store)
+}
+
+type loginStoreRequest struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type loginStoreResponse struct {
+	SessionId             uuid.UUID `json:"session_id"`
+	AccessToken           string    `json:"access_token"`
+	AccessTokenExpiresAt  time.Time `json:"access_token_expires_at"`
+	RefreshToken          string    `json:"refresh_token"`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
+	Store                 db.Store  `json:"store"`
+}
+
+func (server *Server) LoginStore(ctx *gin.Context) {
+	var loginReq loginStoreRequest
+
+	if err := ctx.ShouldBindJSON(&loginReq); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	store, err := server.store.GetStoreByEmail(ctx, loginReq.Email)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = utils.CheckPassword(loginReq.Password, store.HashedPassword)
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	duration := time.Now().Add(time.Hour * 24 * 7).Unix()
+
+	accessToken, accessPayload, err := server.token.CreateToken(store.Name, time.Duration(duration))
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	refreshToken, refreshPayload, err := server.token.CreateToken(store.Name, time.Duration(duration))
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           refreshPayload.ID,
+		IDStore:      store.ID,
+		RefreshToken: refreshToken,
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIp:     ctx.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    refreshPayload.ExpiredAt,
+	})
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := loginStoreResponse{
+		SessionId:             session.ID,
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		Store:                 store,
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
+
 }

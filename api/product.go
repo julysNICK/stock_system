@@ -97,11 +97,11 @@ func (server *Server) ListProducts(ctx *gin.Context) {
 }
 
 type updateProductRequest struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description" binding:"required"`
-	Price       int64  `json:"price" binding:"required"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	Price       int64  `json:"price,omitempty"`
 
-	Quantity int32 `json:"quantity" binding:"required"`
+	Quantity int32 `json:"quantity,omitempty"`
 }
 
 type updateProductResponseUri struct {
@@ -127,22 +127,22 @@ func (server *Server) UpdateProduct(ctx *gin.Context) {
 		ID: reqUri.ProductID,
 		Name: sql.NullString{
 			String: req.Name,
-			Valid:  true,
+			Valid:  req.Name != "",
 		},
 
 		Description: sql.NullString{
 			String: req.Description,
-			Valid:  true,
+			Valid:  req.Description != "",
 		},
 
 		Price: sql.NullString{
 			String: fmt.Sprintf("%d", req.Price),
-			Valid:  true,
+			Valid:  req.Price != 0,
 		},
 
 		Quantity: sql.NullInt32{
 			Int32: req.Quantity,
-			Valid: true,
+			Valid: req.Quantity != 0,
 		},
 	}
 

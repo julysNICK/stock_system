@@ -65,6 +65,44 @@ func (q *Queries) GetStockAlert(ctx context.Context, id int64) (StockAlert, erro
 	return i, err
 }
 
+const getStockAlertsByProductIdAndSupplierId = `-- name: GetStockAlertsByProductIdAndSupplierId :many
+  SELECT id, product_id, supplier_id, alert_quantity, created_at FROM stock_alerts WHERE product_id = $1 AND supplier_id = $2
+`
+
+type GetStockAlertsByProductIdAndSupplierIdParams struct {
+	ProductID  sql.NullInt64 `json:"productID"`
+	SupplierID sql.NullInt64 `json:"supplierID"`
+}
+
+func (q *Queries) GetStockAlertsByProductIdAndSupplierId(ctx context.Context, arg GetStockAlertsByProductIdAndSupplierIdParams) ([]StockAlert, error) {
+	rows, err := q.db.QueryContext(ctx, getStockAlertsByProductIdAndSupplierId, arg.ProductID, arg.SupplierID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []StockAlert{}
+	for rows.Next() {
+		var i StockAlert
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.SupplierID,
+			&i.AlertQuantity,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateStockAlert = `-- name: UpdateStockAlert :one
   UPDATE stock_alerts SET
   alert_quantity = COALESCE($2, alert_quantity)

@@ -70,6 +70,25 @@ func (q *Queries) GetStore(ctx context.Context, id int64) (Store, error) {
 	return i, err
 }
 
+const getStoreByEmail = `-- name: GetStoreByEmail :one
+SELECT id, name, address, contact_email, contact_phone, hashed_password, created_at FROM stores WHERE contact_email = $1 LIMIT 1
+`
+
+func (q *Queries) GetStoreByEmail(ctx context.Context, contactEmail string) (Store, error) {
+	row := q.db.QueryRowContext(ctx, getStoreByEmail, contactEmail)
+	var i Store
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Address,
+		&i.ContactEmail,
+		&i.ContactPhone,
+		&i.HashedPassword,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getStoreForUpdate = `-- name: GetStoreForUpdate :one
 SELECT id, name, address, contact_email, contact_phone, hashed_password, created_at FROM stores WHERE id = $1 LIMIT 1 FOR UPDATE FOR NO KEY UPDATE
 `

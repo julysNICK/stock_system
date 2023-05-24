@@ -7,6 +7,8 @@ package db
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Product struct {
@@ -24,6 +26,17 @@ type Sale struct {
 	ProductID    int64     `json:"productID"`
 	SaleDate     time.Time `json:"saleDate"`
 	QuantitySold int32     `json:"quantitySold"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+
+type Session struct {
+	ID           uuid.UUID `json:"id"`
+	IDStore      int64     `json:"idStore"`
+	RefreshToken string    `json:"refreshToken"`
+	UserAgent    string    `json:"userAgent"`
+	ClientIp     string    `json:"clientIp"`
+	IsBlocked    bool      `json:"isBlocked"`
+	ExpiresAt    time.Time `json:"expiresAt"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,6 +15,7 @@ import (
 	"github.com/golang/mock/gomock"
 	mockdb "github.com/julysNICK/stock_system/db/mock"
 	db "github.com/julysNICK/stock_system/db/sqlc"
+	"github.com/julysNICK/stock_system/token"
 	"github.com/julysNICK/stock_system/utils"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +25,7 @@ func randomSale(t *testing.T, product db.Product) (store db.Sale) {
 	return db.Sale{
 		ID:           int64(utils.RandomInt(1, 100)),
 		ProductID:    product.ID,
-		SaleDate:     time.Now(),
+		SaleDate:     utils.RandomDate(),
 		QuantitySold: int32(utils.RandomInt(1, 100)),
 	}
 
@@ -70,15 +70,19 @@ func TestDeleteProduct(t *testing.T) {
 	salesRandom := randomSale(t, productRandom)
 
 	testCase := []struct {
-		name   string
-		SaleId int64
-
+		name          string
+		SaleId        int64
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStoreDB)
 		checkResponse func(t *testing.T, recoder *httptest.ResponseRecorder)
 	}{
 		{
 			name:   "OK",
 			SaleId: salesRandom.ID,
+
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
 
 			buildStubs: func(store *mockdb.MockStoreDB) {
 
@@ -94,6 +98,9 @@ func TestDeleteProduct(t *testing.T) {
 		{
 			name:   "NOT FOUND",
 			SaleId: salesRandom.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
 
 			buildStubs: func(store *mockdb.MockStoreDB) {
 
@@ -108,6 +115,9 @@ func TestDeleteProduct(t *testing.T) {
 		{
 			name:   "INTERNAL ERROR",
 			SaleId: salesRandom.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
 
 			buildStubs: func(store *mockdb.MockStoreDB) {
 
@@ -122,6 +132,9 @@ func TestDeleteProduct(t *testing.T) {
 		{
 			name:   "PARAMS ERROR URI",
 			SaleId: 0,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
 
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				store.EXPECT().DeleteSale(gomock.Any(), gomock.Any()).Times(0)
@@ -133,8 +146,12 @@ func TestDeleteProduct(t *testing.T) {
 		},
 
 		{
-			name:   "PARAMS ERROR Uri",
+			name:   "PARAMS ERROR URI",
 			SaleId: 0,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
+
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				store.EXPECT().DeleteSale(gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -158,7 +175,7 @@ func TestDeleteProduct(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server := NewServer(store)
+				server := NewTestServer(t,store)
 
 				recorder := httptest.NewRecorder()
 
@@ -166,7 +183,7 @@ func TestDeleteProduct(t *testing.T) {
 
 				request, err := http.NewRequest(http.MethodDelete, url, nil)
 				require.NoError(t, err)
-
+				tc.setupAuth(t, request, server.token)
 				server.router.ServeHTTP(recorder, request)
 				tc.checkResponse(t, recorder)
 			},
@@ -183,12 +200,17 @@ func TestGetSales(t *testing.T) {
 	testCase := []struct {
 		name          string
 		SalesID       int64
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStoreDB)
 		checkResponse func(t *testing.T, recoder *httptest.ResponseRecorder)
 	}{
 		{
 			name:    "OK",
 			SalesID: saleRandom.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
+
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				store.EXPECT().GetSale(gomock.Any(), gomock.Eq(saleRandom.ID)).Times(1).
 					Return(saleRandom, nil)
@@ -201,6 +223,10 @@ func TestGetSales(t *testing.T) {
 		{
 			name:    "NOT FOUND",
 			SalesID: saleRandom.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
+
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				store.EXPECT().GetSale(gomock.Any(), gomock.Eq(saleRandom.ID)).Times(1).
 					Return(db.Sale{}, sql.ErrNoRows)
@@ -213,6 +239,10 @@ func TestGetSales(t *testing.T) {
 		{
 			name:    "INTERNAL ERROR",
 			SalesID: saleRandom.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
+
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				store.EXPECT().GetSale(gomock.Any(), gomock.Eq(saleRandom.ID)).Times(1).
 					Return(db.Sale{}, sql.ErrConnDone)
@@ -227,6 +257,9 @@ func TestGetSales(t *testing.T) {
 			SalesID: 0,
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				store.EXPECT().GetSale(gomock.Any(), gomock.Any()).Times(0)
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -248,7 +281,7 @@ func TestGetSales(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server := NewServer(store)
+			server := NewTestServer(t,store)
 
 				recorder := httptest.NewRecorder()
 
@@ -256,7 +289,7 @@ func TestGetSales(t *testing.T) {
 
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
-
+				tc.setupAuth(t, request, server.token)
 				server.router.ServeHTTP(recorder, request)
 				tc.checkResponse(t, recorder)
 			},
@@ -269,22 +302,23 @@ func TestGetSales(t *testing.T) {
 func TestCreateSale(t *testing.T) {
 	productRandom := randomProduct(t)
 	saleRandom := randomSale(t, productRandom)
-	// saleTxResult := db.SaleTxResult{
-	// 	Sale: saleRandom,
-	// 	Product: db.Product{
-	// 		ID:          saleRandom.ProductID,
-	// 		Name:        productRandom.Name,
-	// 		Description: productRandom.Description,
-	// 		Price:       productRandom.Price,
-	// 		Quantity:    productRandom.Quantity,
-	// 		StoreID:     productRandom.StoreID,
-	// 	},
-	// }
+	saleTxResult := db.SaleTxResult{
+		Sale: saleRandom,
+		Product: db.Product{
+			ID:          saleRandom.ProductID,
+			Name:        productRandom.Name,
+			Description: productRandom.Description,
+			Price:       productRandom.Price,
+			Quantity:    productRandom.Quantity,
+			StoreID:     productRandom.StoreID,
+		},
+	}
 
 	testCase := []struct {
 		name          string
 		body          gin.H
 		buildStubs    func(store *mockdb.MockStoreDB)
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		checkResponse func(t *testing.T, recoder *httptest.ResponseRecorder)
 	}{
 		{
@@ -294,60 +328,55 @@ func TestCreateSale(t *testing.T) {
 				"quantity":      saleRandom.QuantitySold,
 				"quantity_sold": saleRandom.QuantitySold,
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStoreDB) {
-
-				arg := db.SaleTxParams{
-					ProductID:    saleRandom.ProductID,
-					QuantitySold: saleRandom.QuantitySold,
-				}
-
-				log.Println(arg)
-
-				store.EXPECT().SaleTx(gomock.Any(), gomock.Eq(arg)).Times(1)
+				store.EXPECT().SaleTx(gomock.Any(), gomock.Any()).Times(1).Return(saleTxResult, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-
 				require.Equal(t, http.StatusOK, recorder.Code)
-				// requireBodyMatchSaleTX(t, recorder.Body, saleTxResult)
+				requireBodyMatchSaleTX(t, recorder.Body, saleTxResult)
 			},
 		},
 
-		// {
-		// 	name: "INTERNAL ERROR",
-		// 	body: gin.H{
-		// 		"product_id":    saleRandom.ProductID,
-		// 		"quantity":      saleRandom.QuantitySold,
-		// 		"quantity_sold": saleRandom.QuantitySold,
-		// 	},
-		// 	buildStubs: func(store *mockdb.MockStoreDB) {
-		// 		arg := db.CreateSaleParams{
-		// 			ProductID:    saleRandom.ProductID,
-		// 			QuantitySold: saleRandom.QuantitySold,
-		// 			SaleDate:     time.Now(),
-		// 		}
-		// 		store.EXPECT().CreateSale(gomock.Any(), gomock.Eq(arg)).Times(1).
-		// 			Return(db.Store{}, sql.ErrConnDone)
-		// 	},
-		// 	checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-		// 		require.Equal(t, http.StatusInternalServerError, recorder.Code)
+		{
+			name: "INTERNAL ERROR",
+			body: gin.H{
+				"product_id":    saleRandom.ProductID,
+				"quantity":      saleRandom.QuantitySold,
+				"quantity_sold": saleRandom.QuantitySold,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().SaleTx(gomock.Any(), gomock.Any()).Times(1).
+					Return(db.SaleTxResult{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 
-		// 	},
-		// },
-		// {
-		// 	name: "PARAMS ERROR",
-		// 	body: gin.H{
-		// 		"product_id":    saleRandom.ProductID,
-		// 		"quantity":      saleRandom.QuantitySold,
-		// 		"quantity_sold": saleRandom.QuantitySold,
-		// 	},
-		// 	buildStubs: func(store *mockdb.MockStoreDB) {
-		// 		store.EXPECT().CreateSale(gomock.Any(), gomock.Any()).Times(0)
-		// 	},
-		// 	checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-		// 		require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "PARAMS ERROR",
+			body: gin.H{
 
-		// 	},
-		// },
+				"quantity":      saleRandom.QuantitySold,
+				"quantity_sold": saleRandom.QuantitySold,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStoreDB) {
+				store.EXPECT().SaleTx(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+
+			},
+		},
 	}
 
 	for i := range testCase {
@@ -363,7 +392,9 @@ func TestCreateSale(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server := NewServer(store)
+				server := NewTestServer(t,store)
+
+		
 
 				recorder := httptest.NewRecorder()
 
@@ -374,7 +405,7 @@ func TestCreateSale(t *testing.T) {
 
 				request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 				require.NoError(t, err)
-
+				tc.setupAuth(t, request, server.token)
 				server.router.ServeHTTP(recorder, request)
 				tc.checkResponse(t, recorder)
 			},
