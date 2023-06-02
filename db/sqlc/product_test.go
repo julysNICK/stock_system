@@ -14,12 +14,16 @@ import (
 )
 
 func CreateRandomProduct(t *testing.T, store Store) Product {
+	randomSupplier := CreateRandomSupplier(t)
 	arg := CreateProductParams{
 		StoreID:     store.ID,
 		Name:        utils.RandomName(),
 		Price:       "100",
 		Description: utils.RandomString(10),
-		Quantity:    10,
+		Quantity:    10,	
+		ImageUrl: 	utils.RandomString(10),
+		Category: 	utils.RandomString(10),
+		SupplierID:  randomSupplier.ID,
 	}
 
 	product, err := testQueries.CreateProduct(context.Background(), arg)
@@ -52,10 +56,10 @@ func TestGetProducts(t *testing.T) {
 
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "quantity", "store_id", "created_at"}).
-		AddRow(1, "test", "test", "100", 10, 1, mockTimer)
+	rows := sqlmock.NewRows([]string{ "id", "name", "category", "image_url", "description", "price", "quantity", "store_id", "supplier_id", "created_at"}).
+		AddRow(1, "test", "test","image.com","test","100", 10, 1, 1,mockTimer)
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products WHERE id = $1 LIMIT 1`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT  id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products WHERE id = $1 LIMIT 1`)).
 		WithArgs(1).
 		WillReturnRows(rows)
 	mockDb := New(db)
@@ -81,10 +85,10 @@ func TestGetProductForUpdate(t *testing.T) {
 
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "quantity", "store_id", "created_at"}).
-		AddRow(1, "test", "test", "100", 10, 1, mockTimer)
+	rows := sqlmock.NewRows([]string{ "id", "name", "category", "image_url", "description", "price", "quantity", "store_id", "supplier_id", "created_at"}).
+		AddRow(1, "test", "test","image.com","test","100", 10, 1, 1,mockTimer)
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products WHERE id = $1 LIMIT 1 FOR UPDATE`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT  id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products WHERE id = $1 LIMIT 1 FOR UPDATE`)).
 		WithArgs(1).
 		WillReturnRows(rows)
 	mockDb := New(db)
@@ -110,11 +114,11 @@ func TestUpdateProduct(t *testing.T) {
 
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "quantity", "store_id", "created_at"}).
-		AddRow(1, "test", "test", "100", 10, 1, mockTimer)
+	rows := sqlmock.NewRows([]string{ "id", "name", "category", "image_url", "description", "price", "quantity", "store_id", "supplier_id", "created_at"}).
+		AddRow(1, "test", "test","image.com","test","100", 10, 1, 1,mockTimer)
 
-	mock.ExpectQuery(regexp.QuoteMeta(`UPDATE products SET name = COALESCE($2, name), description = COALESCE($3, description), price = COALESCE($4, price), quantity = COALESCE($5, quantity) WHERE id = $1 RETURNING id, name, description, price, quantity, store_id, created_at`)).
-		WithArgs(1, "test", "test", "100", 10).
+	mock.ExpectQuery(regexp.QuoteMeta(`UPDATE products SET name = COALESCE($2, name), description = COALESCE($3, description), category = COALESCE($4, category), image_url = COALESCE($5, image_url), price = COALESCE($6, price), quantity = COALESCE($7, quantity) WHERE id = $1 RETURNING id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at`)).
+		WithArgs(1, "test", "test",  "test", "test.com", "10", 10).
 		WillReturnRows(rows)
 
 	mockDb := New(db)
@@ -130,12 +134,20 @@ func TestUpdateProduct(t *testing.T) {
 			Valid:  true,
 		},
 		Price: sql.NullString{
-			String: "100",
+			String: "10",
 			Valid:  true,
 		},
 		Quantity: sql.NullInt32{
 			Int32: 10,
 			Valid: true,
+		},
+		ImageUrl: sql.NullString{
+			String: "test.com",
+			Valid:  true,
+		},
+		Category: sql.NullString{
+			String: "test",
+			Valid:  true,
 		},
 	}
 
@@ -159,10 +171,10 @@ func TestListProducts(t *testing.T) {
 
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "quantity", "store_id", "created_at"}).
-		AddRow(1, "test", "test", "100", 10, 1, mockTimer)
+	rows := sqlmock.NewRows([]string{ "id", "name", "category", "image_url", "description", "price", "quantity", "store_id", "supplier_id","created_at"}).
+		AddRow(1, "test", "test","test","test", "100", 10, 1, 1,mockTimer)
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
 		WithArgs(1, 0).
 		WillReturnRows(rows)
 
@@ -191,7 +203,7 @@ func TestListProduct_ErrorInQueryContext(t *testing.T) {
 
 	defer db.Close()
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
 		WithArgs(1, 0).
 		WillReturnError(fmt.Errorf("some error"))
 
@@ -281,9 +293,9 @@ func TestListProduct_RowsErrClose(t *testing.T) {
 
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "quantity", "store_id", "created_at"}).CloseError(fmt.Errorf("some error close"))
+	rows := sqlmock.NewRows([]string{"id", "name", "category", "image_url", "description", "price", "quantity", "store_id", "supplier_id","created_at"}).CloseError(fmt.Errorf("some error close"))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, description, price, quantity, store_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2`)).
 		WithArgs(1, 0).
 		WillReturnRows(rows)
 

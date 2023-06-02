@@ -48,15 +48,15 @@ func TestGetSession(t *testing.T) {
 	}
 
 	defer db.Close()
-
+// SELECT id, id_store, refresh_token, user_agent, client_ip, is_blocked, expires_at, created_at FROM sessions WHERE id = $1
 	rows := sqlmock.NewRows([]string{"id", "id_store", "refresh_token", "user_agent", "client_ip", "is_blocked", "expires_at", "created_at"}).
 		AddRow(generateUUID, 1, "test", "test", "test", false, mockTimer, mockTimer)
 
-	momockTimer.ExpectQuery(regexp.QuoteMeta(`SELECT id, id_store, refresh_token, user_agent, client_ip, is_blocked, expires_at, created_at FROM sessions WHERE id = $1 LIMIT 1`)).
-		WithArgs(1).
+	momockTimer.ExpectQuery(regexp.QuoteMeta(`SELECT id, id_store, refresh_token, user_agent, client_ip, is_blocked, expires_at, created_at FROM sessions WHERE id = $1`)).
+		WithArgs(generateUUID).
 		WillReturnRows(rows)
-
-	session, err := testQueries.GetSession(context.Background(), generateUUID)
+	mockDb := New(db)
+	session, err := mockDb.GetSession(context.Background(), generateUUID)
 
 	require.NoError(t, err)
 

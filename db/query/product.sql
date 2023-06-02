@@ -2,11 +2,14 @@
 INSERT INTO products (
   name, 
   description, 
+  category,
+  image_url,
   price, 
   store_id,
+  supplier_id,
   quantity
 ) values  (
-  $1, $2, $3, $4, $5)
+  $1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
 -- name: GetProduct :one
@@ -25,8 +28,17 @@ OFFSET $2;
 UPDATE products SET
 name = COALESCE(sqlc.narg(name), name),
 description = COALESCE(sqlc.narg(description), description),
+category = COALESCE(sqlc.narg(category), category),
+image_url = COALESCE(sqlc.narg(image_url), image_url),
 price = COALESCE(sqlc.narg(price), price),
 quantity = COALESCE(sqlc.narg(quantity), quantity)
 WHERE id = $1
 RETURNING *;
+
+-- name: GetProductsWithJoinWithStore :many
+  SELECT products.*, stores.* FROM products INNER JOIN stores ON products.store_id = stores.id 
+  ORDER BY products.id
+  LIMIT $1
+  OFFSET $2;
+
 

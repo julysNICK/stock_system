@@ -8,14 +8,18 @@ import (
 type ProductTxParams struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Category    string `json:"category"`
+	ImageUrl    string `json:"image_url"`
 	Price       int64  `json:"price"`
 	StoreID     int64  `json:"store_id"`
+	SupplierID  int64  `json:"supplier_id"`
 	Quantity    int32  `json:"quantity"`
 }
 
 type ProductTxResult struct {
 	Product Product `json:"product"`
 	StoreID Store   `json:"store_id"`
+	SupplierId Supplier `json:"supplier_id"`
 }
 
 func (store *SQLStore) ProductTx(ctx context.Context, arg ProductTxParams) (ProductTxResult, error) {
@@ -40,6 +44,10 @@ func (store *SQLStore) ProductTx(ctx context.Context, arg ProductTxParams) (Prod
 			return fmt.Errorf("store_id must be greater than 0")
 		}
 
+		if arg.SupplierID <= 0 {
+			return fmt.Errorf("supplier_id must be greater than 0")
+		}
+
 		if arg.Quantity <= 0 {
 			return fmt.Errorf("quantity must be greater than 0")
 		}
@@ -57,6 +65,10 @@ func (store *SQLStore) ProductTx(ctx context.Context, arg ProductTxParams) (Prod
 		}
 
 		result.StoreID, err = q.GetStore(ctx, arg.StoreID)
+		if err != nil {
+			return err
+		}
+		result.SupplierId, err = q.GetSupplier(ctx, arg.SupplierID)
 
 		if err != nil {
 			return err

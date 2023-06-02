@@ -17,6 +17,11 @@ type CreateProductRequest struct {
 	Quantity    int32  `json:"quantity" binding:"required"`
 }
 
+type CreateProductResponse struct {
+	Product       db.Product `json:"product" binding:"required"`
+	Store         db.Store   `json:"store" binding:"required"`
+}
+
 func (server *Server) CreateProduct(ctx *gin.Context) {
 	var req CreateProductRequest
 
@@ -59,19 +64,30 @@ func (server *Server) GetProduct(ctx *gin.Context) {
 	}
 
 	product, err := server.store.GetProduct(ctx, req.ProductID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	getStore, err := server.store.GetStore(ctx, product.StoreID)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, product)
+	ctx.JSON(http.StatusOK, CreateProductResponse{
+		Product:       product,
+		Store:         getStore,
+	})
 }
 
 type listProductsRequest struct {
 	PageID int32 `form:"page_id" binding:"required,min=1"`
 	Limit  int32 `form:"limit" binding:"required,min=5,max=10"`
 }
+
+
+
 
 func (server *Server) ListProducts(ctx *gin.Context) {
 	var req listProductsRequest
@@ -81,12 +97,12 @@ func (server *Server) ListProducts(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListProductsParams{
+	arg := db.GetProductsWithJoinWithStoreParams{
 		Limit:  req.Limit,
 		Offset: (req.PageID - 1) * req.Limit,
 	}
 
-	products, err := server.store.ListProducts(ctx, arg)
+	products, err := server.store.GetProductsWithJoinWithStore(ctx, arg)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -106,6 +122,12 @@ type updateProductRequest struct {
 
 type updateProductResponseUri struct {
 	ProductID int64 `uri:"product_id" binding:"required,min=1"`
+}
+
+
+type UpdateProductResponse struct {
+	Product       db.Product `json:"product" binding:"required"`
+	Store         db.Store   `json:"store" binding:"required"`
 }
 
 func (server *Server) UpdateProduct(ctx *gin.Context) {
@@ -147,11 +169,20 @@ func (server *Server) UpdateProduct(ctx *gin.Context) {
 	}
 
 	product, err := server.store.UpdateProduct(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	getStore, err := server.store.GetStore(ctx, product.StoreID)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, product)
+	ctx.JSON(http.StatusOK, UpdateProductResponse{
+		Product:       product,
+		Store:         getStore,
+	})
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -135,6 +136,8 @@ func (server *Server) UpdateStore(ctx *gin.Context) {
 		validatorErrorParserInParams(ctx, err)
 		return
 	}
+
+	fmt.Println(reqUri.StoreID)
 
 	arg := db.UpdateStoreParams{
 		ID: reqUri.StoreID,

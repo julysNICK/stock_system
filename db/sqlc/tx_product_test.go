@@ -11,6 +11,7 @@ func TestTxProduct(t *testing.T){
 		store := NewStoreDB(testDb)
 
 		storeRandom := CreateRandomStore(t)
+		supplierRandom := CreateRandomSupplier(t)
 
 	 arg, err := store.ProductTx(context.Background(), ProductTxParams{
 		Name: "test product",
@@ -18,6 +19,7 @@ func TestTxProduct(t *testing.T){
 		Price: 100,
 		StoreID: storeRandom.ID,
 		Quantity: 10,
+		SupplierID: supplierRandom.ID,
 	 })
 
 	 require.NoError(t, err)
@@ -29,6 +31,7 @@ func TestTxProductErrorCreate(t *testing.T){
 		store := NewStoreDB(testDb)
 
 		storeRandom := CreateRandomStore(t)
+		supplierRandom := CreateRandomSupplier(t)
 
 	 arg, err := store.ProductTx(context.Background(), ProductTxParams{
 		Name: "test product",
@@ -36,6 +39,7 @@ func TestTxProductErrorCreate(t *testing.T){
 		Price: 100,
 		StoreID: storeRandom.ID,
 		Quantity: 10,
+		SupplierID: supplierRandom.ID,
 	 })
 
 	 require.NoError(t, err)
