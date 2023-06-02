@@ -14,10 +14,13 @@ import (
 type Product struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
+	Category    string    `json:"category"`
+	ImageUrl    string    `json:"imageUrl"`
 	Description string    `json:"description"`
 	Price       string    `json:"price"`
 	Quantity    int32     `json:"quantity"`
 	StoreID     int64     `json:"storeID"`
+	SupplierID  int64     `json:"supplierID"`
 	CreatedAt   time.Time `json:"createdAt"`
 }
 

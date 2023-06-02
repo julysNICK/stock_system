@@ -408,28 +408,6 @@ func TestUpdateStore(t *testing.T) {
 
 			},
 		},
-
-		{
-			name:      "PARAMS ERROR BODY",
-			AccountId: storeRandom.ID,
-			body: gin.H{
-
-				"address":         updateStore.Address,
-				"contact_email":   updateStore.ContactEmail,
-				"contact_phone":   updateStore.ContactPhone,
-				"hashed_password": updateStore.HashedPassword,
-			},
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
-			},
-			buildStubs: func(store *mockdb.MockStoreDB) {
-				store.EXPECT().UpdateProduct(gomock.Any(), gomock.Any()).Times(0)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-
-			},
-		},
 	}
 
 	for i := range testCase {

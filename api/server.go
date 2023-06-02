@@ -11,6 +11,9 @@ import (
 
 
 
+
+
+
 type Server struct {
 	config utils.Config
 	store  db.StoreDB
@@ -50,6 +53,7 @@ func (server *Server) setupRouter() {
 	router.GET("/stores", server.ListStores)
 	router.POST("/stores", server.CreateStore)
 	router.GET("/products", server.ListProducts)
+	router.GET("/chat/:room", server.HandlerMessage)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.token))
 

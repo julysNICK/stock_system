@@ -15,19 +15,25 @@ const createProduct = `-- name: CreateProduct :one
 INSERT INTO products (
   name, 
   description, 
+  category,
+  image_url,
   price, 
   store_id,
+  supplier_id,
   quantity
 ) values  (
-  $1, $2, $3, $4, $5)
-RETURNING id, name, description, price, quantity, store_id, created_at
+  $1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at
 `
 
 type CreateProductParams struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Category    string `json:"category"`
+	ImageUrl    string `json:"imageUrl"`
 	Price       string `json:"price"`
 	StoreID     int64  `json:"storeID"`
+	SupplierID  int64  `json:"supplierID"`
 	Quantity    int32  `json:"quantity"`
 }
 
@@ -35,25 +41,31 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 	row := q.db.QueryRowContext(ctx, createProduct,
 		arg.Name,
 		arg.Description,
+		arg.Category,
+		arg.ImageUrl,
 		arg.Price,
 		arg.StoreID,
+		arg.SupplierID,
 		arg.Quantity,
 	)
 	var i Product
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Category,
+		&i.ImageUrl,
 		&i.Description,
 		&i.Price,
 		&i.Quantity,
 		&i.StoreID,
+		&i.SupplierID,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT id, name, description, price, quantity, store_id, created_at FROM products WHERE id = $1 LIMIT 1
+SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
@@ -62,17 +74,20 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Category,
+		&i.ImageUrl,
 		&i.Description,
 		&i.Price,
 		&i.Quantity,
 		&i.StoreID,
+		&i.SupplierID,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getProductForUpdate = `-- name: GetProductForUpdate :one
-SELECT id, name, description, price, quantity, store_id, created_at FROM products WHERE id = $1 LIMIT 1 FOR UPDATE FOR NO KEY UPDATE
+SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products WHERE id = $1 LIMIT 1 FOR UPDATE FOR NO KEY UPDATE
 `
 
 func (q *Queries) GetProductForUpdate(ctx context.Context, id int64) (Product, error) {
@@ -81,17 +96,20 @@ func (q *Queries) GetProductForUpdate(ctx context.Context, id int64) (Product, e
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Category,
+		&i.ImageUrl,
 		&i.Description,
 		&i.Price,
 		&i.Quantity,
 		&i.StoreID,
+		&i.SupplierID,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getProductsWithJoinWithStore = `-- name: GetProductsWithJoinWithStore :many
-  SELECT products.id, products.name, products.description, products.price, products.quantity, products.store_id, products.created_at, stores.id, stores.name, stores.address, stores.contact_email, stores.contact_phone, stores.hashed_password, stores.created_at FROM products INNER JOIN stores ON products.store_id = stores.id 
+  SELECT products.id, products.name, products.category, products.image_url, products.description, products.price, products.quantity, products.store_id, products.supplier_id, products.created_at, stores.id, stores.name, stores.address, stores.contact_email, stores.contact_phone, stores.hashed_password, stores.created_at FROM products INNER JOIN stores ON products.store_id = stores.id 
   ORDER BY products.id
   LIMIT $1
   OFFSET $2
@@ -105,10 +123,13 @@ type GetProductsWithJoinWithStoreParams struct {
 type GetProductsWithJoinWithStoreRow struct {
 	ID             int64     `json:"id"`
 	Name           string    `json:"name"`
+	Category       string    `json:"category"`
+	ImageUrl       string    `json:"imageUrl"`
 	Description    string    `json:"description"`
 	Price          string    `json:"price"`
 	Quantity       int32     `json:"quantity"`
 	StoreID        int64     `json:"storeID"`
+	SupplierID     int64     `json:"supplierID"`
 	CreatedAt      time.Time `json:"createdAt"`
 	ID_2           int64     `json:"id2"`
 	Name_2         string    `json:"name2"`
@@ -131,10 +152,13 @@ func (q *Queries) GetProductsWithJoinWithStore(ctx context.Context, arg GetProdu
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Category,
+			&i.ImageUrl,
 			&i.Description,
 			&i.Price,
 			&i.Quantity,
 			&i.StoreID,
+			&i.SupplierID,
 			&i.CreatedAt,
 			&i.ID_2,
 			&i.Name_2,
@@ -158,7 +182,7 @@ func (q *Queries) GetProductsWithJoinWithStore(ctx context.Context, arg GetProdu
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, description, price, quantity, store_id, created_at FROM products
+SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -181,10 +205,13 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]P
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Category,
+			&i.ImageUrl,
 			&i.Description,
 			&i.Price,
 			&i.Quantity,
 			&i.StoreID,
+			&i.SupplierID,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -204,16 +231,20 @@ const updateProduct = `-- name: UpdateProduct :one
 UPDATE products SET
 name = COALESCE($2, name),
 description = COALESCE($3, description),
-price = COALESCE($4, price),
-quantity = COALESCE($5, quantity)
+category = COALESCE($4, category),
+image_url = COALESCE($5, image_url),
+price = COALESCE($6, price),
+quantity = COALESCE($7, quantity)
 WHERE id = $1
-RETURNING id, name, description, price, quantity, store_id, created_at
+RETURNING id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at
 `
 
 type UpdateProductParams struct {
 	ID          int64          `json:"id"`
 	Name        sql.NullString `json:"name"`
 	Description sql.NullString `json:"description"`
+	Category    sql.NullString `json:"category"`
+	ImageUrl    sql.NullString `json:"imageUrl"`
 	Price       sql.NullString `json:"price"`
 	Quantity    sql.NullInt32  `json:"quantity"`
 }
@@ -223,6 +254,8 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		arg.ID,
 		arg.Name,
 		arg.Description,
+		arg.Category,
+		arg.ImageUrl,
 		arg.Price,
 		arg.Quantity,
 	)
@@ -230,10 +263,13 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Category,
+		&i.ImageUrl,
 		&i.Description,
 		&i.Price,
 		&i.Quantity,
 		&i.StoreID,
+		&i.SupplierID,
 		&i.CreatedAt,
 	)
 	return i, err

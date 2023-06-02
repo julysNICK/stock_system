@@ -11,10 +11,13 @@ CREATE TABLE "stores" (
 CREATE TABLE "products" (
   "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
+  "category" varchar NOT NULL,
+  "image_url" varchar NOT NULL,
   "description" varchar NOT NULL,
   "price" decimal NOT NULL,
   "quantity" int NOT NULL,
   "store_id" bigint NOT NULL,
+  "supplier_id" bigint NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
 
