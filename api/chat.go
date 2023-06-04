@@ -36,6 +36,8 @@ func (s *Server) HandlerMessage( c *gin.Context) {
 		return
 	}
 
+	
+
 	roomMux.Lock()
 
 	if _, ok := rooms[room]; !ok {
