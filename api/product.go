@@ -15,17 +15,21 @@ type CreateProductRequest struct {
 	Price       int64  `json:"price" binding:"required"`
 	StoreID     int64  `json:"store_id" binding:"required"`
 	Quantity    int32  `json:"quantity" binding:"required"`
+	SupplierID  int64  `json:"supplier_id" binding:"required"`
+	Category    string `json:"category" binding:"required"`
+	ImageUrl    string `json:"image_url" binding:"required"`
 }
 
 type CreateProductResponse struct {
-	Product       db.Product `json:"product" binding:"required"`
-	Store         db.Store   `json:"store" binding:"required"`
+	Product db.Product `json:"product" binding:"required"`
+	Store   db.Store   `json:"store" binding:"required"`
 }
 
 func (server *Server) CreateProduct(ctx *gin.Context) {
 	var req CreateProductRequest
-
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		fmt.Println("err", err)
+
 		validatorErrorParserInParams(ctx, err)
 		return
 	}
@@ -36,6 +40,9 @@ func (server *Server) CreateProduct(ctx *gin.Context) {
 		Price:       req.Price,
 		StoreID:     req.StoreID,
 		Quantity:    req.Quantity,
+		SupplierID:  req.SupplierID,
+		Category:    req.Category,
+		ImageUrl:    req.ImageUrl,
 	}
 
 	product, err := server.store.ProductTx(ctx, arg)
@@ -76,8 +83,8 @@ func (server *Server) GetProduct(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, CreateProductResponse{
-		Product:       product,
-		Store:         getStore,
+		Product: product,
+		Store:   getStore,
 	})
 }
 
@@ -85,9 +92,6 @@ type listProductsRequest struct {
 	PageID int32 `form:"page_id" binding:"required,min=1"`
 	Limit  int32 `form:"limit" binding:"required,min=5,max=10"`
 }
-
-
-
 
 func (server *Server) ListProducts(ctx *gin.Context) {
 	var req listProductsRequest
@@ -124,10 +128,9 @@ type updateProductResponseUri struct {
 	ProductID int64 `uri:"product_id" binding:"required,min=1"`
 }
 
-
 type UpdateProductResponse struct {
-	Product       db.Product `json:"product" binding:"required"`
-	Store         db.Store   `json:"store" binding:"required"`
+	Product db.Product `json:"product" binding:"required"`
+	Store   db.Store   `json:"store" binding:"required"`
 }
 
 func (server *Server) UpdateProduct(ctx *gin.Context) {
@@ -182,7 +185,7 @@ func (server *Server) UpdateProduct(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, UpdateProductResponse{
-		Product:       product,
-		Store:         getStore,
+		Product: product,
+		Store:   getStore,
 	})
 }
