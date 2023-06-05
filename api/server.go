@@ -9,18 +9,12 @@ import (
 	"github.com/julysNICK/stock_system/utils"
 )
 
-
-
-
-
-
 type Server struct {
 	config utils.Config
 	store  db.StoreDB
 	router *gin.Engine
 	token  token.Maker
 }
-
 
 func NewServer(config utils.Config, store db.StoreDB) (*Server, error) {
 	tokenMaker, err := token.NewJwtMaker(config.TOKEN_SYMMETRIC_KEY)
@@ -31,8 +25,8 @@ func NewServer(config utils.Config, store db.StoreDB) (*Server, error) {
 
 	server := &Server{
 		config: config,
-		token: tokenMaker,
-		store: store}
+		token:  tokenMaker,
+		store:  store}
 
 	server.setupRouter()
 
@@ -54,29 +48,27 @@ func (server *Server) setupRouter() {
 	router.POST("/stores", server.CreateStore)
 	router.GET("/products", server.ListProducts)
 	router.GET("/chat/:room", server.HandlerMessage)
+	router.GET("/products/:product_id", server.GetProduct)
+	router.POST("/products", server.CreateProduct)
+	router.PATCH("/products/:product_id", server.UpdateProduct)
 
-	authRoutes := router.Group("/").Use(authMiddleware(server.token))
+	router.PATCH("/stores/:store_id", server.UpdateStore)
+	router.GET("/stores/:store_id", server.GetStore)
 
-	authRoutes.PATCH("/stores/:store_id", server.UpdateStore)
-	authRoutes.GET("/stores/:store_id", server.GetStore)
+	router.POST("/suppliers", server.CreateSupplier)
+	router.GET("/suppliers/:supplier_id", server.GetSupplier)
+	router.PATCH("/suppliers/:supplier_id", server.UpdateSupplier)
 
-	authRoutes.POST("/suppliers", server.CreateSupplier)
-	authRoutes.GET("/suppliers/:supplier_id", server.GetSupplier)
-	authRoutes.PATCH("/suppliers/:supplier_id", server.UpdateSupplier)
+	router.POST("/sales", server.CreateSale)
+	router.GET("/sales/:sale_id", server.GetSale)
+	router.GET("/sales", server.ListSales)
+	router.DELETE("/sales/:sale_id", server.DeleteSale)
 
-	authRoutes.GET("/products/:product_id", server.GetProduct)
-	authRoutes.POST("/products", server.CreateProduct)
-	authRoutes.PATCH("/products/:product_id", server.UpdateProduct)
-
-	authRoutes.POST("/sales", server.CreateSale)
-	authRoutes.GET("/sales/:sale_id", server.GetSale)
-	authRoutes.GET("/sales", server.ListSales)
-	authRoutes.DELETE("/sales/:sale_id", server.DeleteSale)
-
-	authRoutes.POST("/stock_alerts", server.CreateStockAlert)
-	authRoutes.GET("/stock_alerts/:stock_alert_id", server.GetStockAlert)
-	authRoutes.PATCH("/stock_alerts/:stock_alert_id", server.UpdateStockAlert)
-	authRoutes.DELETE("/stock_alerts/:stock_alert_id", server.DeleteStockAlert)
+	router.POST("/stock_alerts", server.CreateStockAlert)
+	router.GET("/stock_alerts/:stock_alert_id", server.GetStockAlert)
+	router.PATCH("/stock_alerts/:stock_alert_id", server.UpdateStockAlert)
+	router.DELETE("/stock_alerts/:stock_alert_id", server.DeleteStockAlert)
+	// authRoutes := router.Group("/").Use(authMiddleware(server.token))
 
 	server.router = router
 }

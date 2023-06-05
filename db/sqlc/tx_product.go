@@ -17,8 +17,8 @@ type ProductTxParams struct {
 }
 
 type ProductTxResult struct {
-	Product Product `json:"product"`
-	StoreID Store   `json:"store_id"`
+	Product    Product  `json:"product"`
+	StoreID    Store    `json:"store_id"`
 	SupplierId Supplier `json:"supplier_id"`
 }
 
@@ -58,6 +58,9 @@ func (store *SQLStore) ProductTx(ctx context.Context, arg ProductTxParams) (Prod
 			Price:       fmt.Sprintf("%d", arg.Price),
 			StoreID:     arg.StoreID,
 			Quantity:    arg.Quantity,
+			ImageUrl:    arg.ImageUrl,
+			Category:    arg.Category,
+			SupplierID:  arg.SupplierID,
 		})
 
 		if err != nil {
