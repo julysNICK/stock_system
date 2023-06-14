@@ -34,6 +34,9 @@ new_migration:
 initdocker:
 	sudo systemctl start docker && sudo docker start postgres_stock_system
 
+stopdocker:
+	sudo systemctl stop docker && sudo docker stop postgres_stock_system
+
 composeup:
 	sudo docker compose up 
 	
@@ -47,4 +50,4 @@ server:
 
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/julysNICK/stock_system/db/sqlc StoreDB
-.PHONY: network clearforup postgres createdb dropdb migrateup migratedown migrateup1 new_migration initdocker composeup sqlc test server 
+.PHONY: network clearforup postgres createdb dropdb migrateup migratedown migrateup1 new_migration initdocker stopdocker composeup sqlc test server 

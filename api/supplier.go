@@ -122,3 +122,32 @@ func (server *Server) UpdateSupplier(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, supplier)
 }
+
+
+type listSuppliersRequest struct {
+	PageID int32 `form:"page_id" binding:"required,min=1"`
+	Limit  int32 `form:"limit" binding:"required,min=5,max=10"`
+}
+
+func (server *Server) ListSuppliers(ctx *gin.Context) {
+	var req listSuppliersRequest
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	arg := db.GetAllSuppliersParams{
+		Limit:  req.Limit,
+		Offset: (req.PageID - 1) * req.Limit,
+	}
+
+	suppliers, err := server.store.GetAllSuppliers(ctx, arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, suppliers)
+}

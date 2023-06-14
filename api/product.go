@@ -89,8 +89,9 @@ func (server *Server) GetProduct(ctx *gin.Context) {
 }
 
 type listProductsRequest struct {
-	PageID int32 `form:"page_id" binding:"required,min=1"`
-	Limit  int32 `form:"limit" binding:"required,min=5,max=10"`
+	PageID   int32  `form:"page_id" binding:"required,min=1"`
+	Limit    int32  `form:"limit" binding:"required,min=5,max=10"`
+	Category string `form:"category" binding:"required"`
 }
 
 func (server *Server) ListProducts(ctx *gin.Context) {
@@ -100,20 +101,32 @@ func (server *Server) ListProducts(ctx *gin.Context) {
 		validatorErrorParserInParams(ctx, err)
 		return
 	}
+	if req.Category == "all" {
+		arg := db.ListAllProductsParams{
+			Limit:  req.Limit,
+			Offset: (req.PageID - 1) * req.Limit,
+		}
 
-	arg := db.GetProductsWithJoinWithStoreParams{
-		Limit:  req.Limit,
-		Offset: (req.PageID - 1) * req.Limit,
+		products, err := server.store.ListAllProducts(ctx, arg)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusOK, products)
+	} else {
+		arg := db.GetProductsWithJoinWithStoreParams{
+			Limit:    req.Limit,
+			Offset:   (req.PageID - 1) * req.Limit,
+			Category: req.Category,
+		}
+		products, err := server.store.GetProductsWithJoinWithStore(ctx, arg)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusOK, products)
 	}
-
-	products, err := server.store.GetProductsWithJoinWithStore(ctx, arg)
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, products)
 }
 
 type updateProductRequest struct {
@@ -188,4 +201,103 @@ func (server *Server) UpdateProduct(ctx *gin.Context) {
 		Product: product,
 		Store:   getStore,
 	})
+}
+
+type getProductBySupplierIdRequest struct {
+	SupplierId int64 `uri:"supplier_id" binding:"required,min=1"`
+}
+
+type listProductsBySupplierIdRequest struct {
+	PageID int32 `form:"page_id" binding:"required,min=1"`
+	Limit  int32 `form:"limit" binding:"required,min=5,max=10"`
+}
+
+func (server *Server) GetProductsBySupplierId(ctx *gin.Context) {
+	var req getProductBySupplierIdRequest
+	var reqQuery listProductsBySupplierIdRequest
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	if err := ctx.ShouldBindQuery(&reqQuery); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	arg := db.GetProductsWithJoinWithSupplierBySupplierIdParams{
+		SupplierID: req.SupplierId,
+		Limit:      reqQuery.Limit,
+		Offset:     (reqQuery.PageID - 1) * reqQuery.Limit,
+	}
+
+	products, err := server.store.GetProductsWithJoinWithSupplierBySupplierId(ctx, arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, products)
+
+}
+
+type listProductsByCategorydRequest struct {
+	PageID   int32  `form:"page_id" binding:"required,min=1"`
+	Limit    int32  `form:"limit" binding:"required,min=5,max=10"`
+	Category string `form:"category" binding:"required"`
+}
+
+func (server *Server) GetProductsByCategory(ctx *gin.Context) {
+	var req listProductsByCategorydRequest
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	arg := db.GetProductsByCategoryParams{
+		Category: req.Category,
+		Limit:    req.Limit,
+		Offset:   (req.PageID - 1) * req.Limit,
+	}
+
+	products, err := server.store.GetProductsByCategory(ctx, arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, products)
+}
+
+type listProductsSearchdRequest struct {
+	PageID   int32  `form:"page_id" binding:"required,min=1"`
+	Limit    int32  `form:"limit" binding:"required,min=5,max=10"`
+	Query    string `form:"query" binding:"required"`
+}
+
+func (server *Server) GetProductsBySearch(ctx *gin.Context) {
+	var req listProductsSearchdRequest
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	 arg := sql.NullString{
+		String: req.Query,
+		Valid:  req.Query != "",
+	 }
+
+	products, err := server.store.SearchProducts(ctx, arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, products)
 }

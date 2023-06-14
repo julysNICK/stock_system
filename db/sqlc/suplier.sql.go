@@ -47,6 +47,45 @@ func (q *Queries) CreateSupplier(ctx context.Context, arg CreateSupplierParams) 
 	return i, err
 }
 
+const getAllSuppliers = `-- name: GetAllSuppliers :many
+  SELECT id, name, address, email, contact_phone, created_at FROM suppliers ORDER BY id ASC LIMIT $1 OFFSET $2
+`
+
+type GetAllSuppliersParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetAllSuppliers(ctx context.Context, arg GetAllSuppliersParams) ([]Supplier, error) {
+	rows, err := q.db.QueryContext(ctx, getAllSuppliers, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Supplier{}
+	for rows.Next() {
+		var i Supplier
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Address,
+			&i.Email,
+			&i.ContactPhone,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSupplier = `-- name: GetSupplier :one
   SELECT id, name, address, email, contact_phone, created_at FROM suppliers WHERE id = $1 LIMIT 1
 `

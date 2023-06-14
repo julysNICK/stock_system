@@ -48,15 +48,21 @@ func (server *Server) setupRouter() {
 	router.POST("/stores", server.CreateStore)
 	router.GET("/products", server.ListProducts)
 	router.GET("/chat/:room", server.HandlerMessage)
+	
 	router.GET("/products/:product_id", server.GetProduct)
+	router.GET("/products/supplier/:supplier_id", server.GetProductsBySupplierId)
 	router.POST("/products", server.CreateProduct)
 	router.PATCH("/products/:product_id", server.UpdateProduct)
+	router.GET("/products/category", server.GetProductsByCategory)
+	router.GET("/products", server.GetProductsBySearch)
+
 
 	router.PATCH("/stores/:store_id", server.UpdateStore)
 	router.GET("/stores/:store_id", server.GetStore)
 
 	router.POST("/suppliers", server.CreateSupplier)
 	router.GET("/suppliers/:supplier_id", server.GetSupplier)
+	router.GET("/suppliers", server.ListSuppliers)
 	router.PATCH("/suppliers/:supplier_id", server.UpdateSupplier)
 
 	router.POST("/sales", server.CreateSale)
