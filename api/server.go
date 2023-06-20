@@ -54,7 +54,7 @@ func (server *Server) setupRouter() {
 	router.POST("/products", server.CreateProduct)
 	router.PATCH("/products/:product_id", server.UpdateProduct)
 	router.GET("/products/category", server.GetProductsByCategory)
-	router.GET("/products", server.GetProductsBySearch)
+	router.GET("/products/search", server.GetProductsBySearch)
 
 
 	router.PATCH("/stores/:store_id", server.UpdateStore)

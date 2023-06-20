@@ -274,9 +274,7 @@ func (server *Server) GetProductsByCategory(ctx *gin.Context) {
 }
 
 type listProductsSearchdRequest struct {
-	PageID   int32  `form:"page_id" binding:"required,min=1"`
-	Limit    int32  `form:"limit" binding:"required,min=5,max=10"`
-	Query    string `form:"query" binding:"required"`
+	Query string `form:"query" binding:"required"`
 }
 
 func (server *Server) GetProductsBySearch(ctx *gin.Context) {
@@ -287,10 +285,10 @@ func (server *Server) GetProductsBySearch(ctx *gin.Context) {
 		return
 	}
 
-	 arg := sql.NullString{
+	arg := sql.NullString{
 		String: req.Query,
 		Valid:  req.Query != "",
-	 }
+	}
 
 	products, err := server.store.SearchProducts(ctx, arg)
 
@@ -300,4 +298,38 @@ func (server *Server) GetProductsBySearch(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, products)
+}
+
+type CreateProductBuyRequest struct {
+	ProductID int32 `json:"product_id" binding:"required,min=1"`
+	Quantity  int32 `json:"quantity" binding:"required,min=1"`
+	StoreID   int32 `json:"store_id" binding:"required,min=1"`
+}
+
+type CreateProductBuyResponse struct {
+	Product db.Product `json:"product" binding:"required"`
+}
+
+func (server *Server) CreateProductBuy(ctx *gin.Context) {
+	var req CreateProductBuyRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	arg := db.ProductBuyTxParams{
+		ProductID: req.ProductID,
+		Quantity:  req.Quantity,
+		StoreID:   req.StoreID,
+	}
+
+	product, err := server.store.ProductBuyTx(ctx, arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, product)
 }

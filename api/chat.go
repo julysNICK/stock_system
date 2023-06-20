@@ -10,9 +10,10 @@ import (
 )
 
 type Message struct {
-	Room 	string `json:"room"`
-	Author 	string `json:"author"`
+	Room    string `json:"room"`
+	Author  string `json:"author"`
 	Content string `json:"content"`
+	IsMe    bool   `json:"isMe"`
 }
 
 var (
@@ -27,7 +28,7 @@ var (
 	roomMux sync.Mutex
 )
 
-func (s *Server) HandlerMessage( c *gin.Context) {
+func (s *Server) HandlerMessage(c *gin.Context) {
 	room := c.Param("room")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 
@@ -35,8 +36,6 @@ func (s *Server) HandlerMessage( c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	
 
 	roomMux.Lock()
 
@@ -52,16 +51,16 @@ func (s *Server) HandlerMessage( c *gin.Context) {
 }
 
 func readMessage(room string, conn *websocket.Conn) {
-	defer func(){
-			conn.Close()
-			roomMux.Lock()
-			delete(rooms[room], conn)
+	defer func() {
+		conn.Close()
+		roomMux.Lock()
+		delete(rooms[room], conn)
 
-			roomMux.Unlock()
+		roomMux.Unlock()
 	}()
 
 	for {
-		var msg Message 
+		var msg Message
 		err := conn.ReadJSON(&msg)
 
 		if err != nil {
@@ -76,14 +75,13 @@ func readMessage(room string, conn *websocket.Conn) {
 func broadcastMessage(room string, msg Message) {
 	roomMux.Lock()
 
-	for conn := range rooms[room]{
+	for conn := range rooms[room] {
 		err := conn.WriteJSON(msg)
 
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-
 
 	}
 

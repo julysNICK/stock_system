@@ -436,7 +436,8 @@ description = COALESCE($3, description),
 category = COALESCE($4, category),
 image_url = COALESCE($5, image_url),
 price = COALESCE($6, price),
-quantity = COALESCE($7, quantity)
+quantity = COALESCE($7, quantity),
+store_id = COALESCE($8, store_id)
 WHERE id = $1
 RETURNING id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at
 `
@@ -449,6 +450,7 @@ type UpdateProductParams struct {
 	ImageUrl    sql.NullString `json:"imageUrl"`
 	Price       sql.NullString `json:"price"`
 	Quantity    sql.NullInt32  `json:"quantity"`
+	StoreID     sql.NullInt64  `json:"storeID"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
@@ -460,6 +462,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		arg.ImageUrl,
 		arg.Price,
 		arg.Quantity,
+		arg.StoreID,
 	)
 	var i Product
 	err := row.Scan(

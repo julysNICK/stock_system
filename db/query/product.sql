@@ -38,7 +38,8 @@ description = COALESCE(sqlc.narg(description), description),
 category = COALESCE(sqlc.narg(category), category),
 image_url = COALESCE(sqlc.narg(image_url), image_url),
 price = COALESCE(sqlc.narg(price), price),
-quantity = COALESCE(sqlc.narg(quantity), quantity)
+quantity = COALESCE(sqlc.narg(quantity), quantity),
+store_id = COALESCE(sqlc.narg(store_id), store_id)
 WHERE id = $1
 RETURNING *;
 

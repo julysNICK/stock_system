@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 )
 
@@ -72,6 +73,77 @@ func (store *SQLStore) ProductTx(ctx context.Context, arg ProductTxParams) (Prod
 			return err
 		}
 		result.SupplierId, err = q.GetSupplier(ctx, arg.SupplierID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+
+	})
+	return result, err
+}
+
+type ProductBuyTxParams struct {
+	ProductID int32 `json:"product_id"`
+	Quantity  int32 `json:"quantity"`
+	StoreID   int32 `json:"store_id"`
+}
+
+type ProductBuyTxResult struct {
+	Product Product `json:"product"`
+}
+
+func (store *SQLStore) ProductBuyTx(ctx context.Context, argTX ProductBuyTxParams) (ProductBuyTxResult, error) {
+	var result ProductBuyTxResult
+
+	err := store.execTx(ctx, func(q *Queries) error {
+		var err error
+
+		if argTX.ProductID == 0 {
+			return fmt.Errorf("product_id can't be empty")
+		}
+
+		if argTX.Quantity == 0 {
+			return fmt.Errorf("quantity can't be empty")
+		}
+
+		productGet, err := q.GetProduct(ctx, int64(argTX.ProductID))
+
+		if productGet.Quantity < argTX.Quantity {
+			return fmt.Errorf("quantity can't be empty")
+		}
+
+		if err != nil {
+			return err
+		}
+		quantityResult := int32(productGet.Quantity) - argTX.Quantity
+
+		arg := UpdateProductParams{
+			Quantity: sql.NullInt32{
+				Int32: quantityResult,
+				Valid: true,
+			},
+		}
+
+		UpdateProduct, err := q.UpdateProduct(ctx, arg)
+
+		if err != nil {
+			return err
+		}
+
+		argCreateProductBuy := CreateProductParams{
+			Name:        productGet.Name,
+			Description: productGet.Description,
+			Price:       productGet.Price,
+			StoreID:     int64(argTX.StoreID),
+			Quantity:    UpdateProduct.Quantity,
+			ImageUrl:    productGet.ImageUrl,
+			Category:    productGet.Category,
+			SupplierID:  productGet.SupplierID,
+		}
+
+		result.Product, err = q.CreateProduct(ctx, argCreateProductBuy)
 
 		if err != nil {
 			return err
