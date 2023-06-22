@@ -110,16 +110,22 @@ func (store *SQLStore) ProductBuyTx(ctx context.Context, argTX ProductBuyTxParam
 
 		productGet, err := q.GetProduct(ctx, int64(argTX.ProductID))
 
-		if productGet.Quantity < argTX.Quantity {
-			return fmt.Errorf("quantity can't be empty")
-		}
-
 		if err != nil {
+			if err == sql.ErrNoRows {
+				return fmt.Errorf("product_id not found")
+			}
+
 			return err
 		}
+
+		if productGet.Quantity < argTX.Quantity {
+			return fmt.Errorf("Don't have enough quantity")
+		}
+
 		quantityResult := int32(productGet.Quantity) - argTX.Quantity
 
 		arg := UpdateProductParams{
+			ID: int64(argTX.ProductID),
 			Quantity: sql.NullInt32{
 				Int32: quantityResult,
 				Valid: true,
@@ -127,8 +133,10 @@ func (store *SQLStore) ProductBuyTx(ctx context.Context, argTX ProductBuyTxParam
 		}
 
 		UpdateProduct, err := q.UpdateProduct(ctx, arg)
+		fmt.Println("UpdateProduct", UpdateProduct)
 
 		if err != nil {
+			fmt.Println("UpdateProduct", err)
 			return err
 		}
 
@@ -137,7 +145,7 @@ func (store *SQLStore) ProductBuyTx(ctx context.Context, argTX ProductBuyTxParam
 			Description: productGet.Description,
 			Price:       productGet.Price,
 			StoreID:     int64(argTX.StoreID),
-			Quantity:    UpdateProduct.Quantity,
+			Quantity:    argTX.Quantity,
 			ImageUrl:    productGet.ImageUrl,
 			Category:    productGet.Category,
 			SupplierID:  productGet.SupplierID,

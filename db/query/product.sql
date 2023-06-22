@@ -63,3 +63,6 @@ ORDER BY id
 LIMIT $2
 OFFSET $3;
 
+-- name: DeleteProduct :one
+DELETE FROM products WHERE id = $1 RETURNING id;
+

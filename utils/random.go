@@ -21,6 +21,10 @@ func RandomString(n int) string {
 
 }
 
+func RandomInt64(min, max int64) int64 {
+	return min + rand.Int63n(max-min)
+}
+
 func RandomName() string {
 	return RandomString(6)
 }

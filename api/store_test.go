@@ -130,7 +130,7 @@ func TestGetStore(t *testing.T) {
 			name:      "OK",
 			AccountId: storeRandom.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 
 			buildStubs: func(store *mockdb.MockStoreDB) {
@@ -146,7 +146,7 @@ func TestGetStore(t *testing.T) {
 			name:      "NOT FOUND",
 			AccountId: storeRandom.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 
 			buildStubs: func(store *mockdb.MockStoreDB) {
@@ -162,7 +162,7 @@ func TestGetStore(t *testing.T) {
 			name:      "INTERNAL ERROR",
 			AccountId: storeRandom.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 
 			buildStubs: func(store *mockdb.MockStoreDB) {
@@ -181,7 +181,7 @@ func TestGetStore(t *testing.T) {
 				store.EXPECT().GetStore(gomock.Any(), gomock.Any()).Times(0)
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -203,7 +203,7 @@ func TestGetStore(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-			server := NewTestServer(t,store)
+				server := NewTestServer(t, store)
 				recorder := httptest.NewRecorder()
 
 				url := fmt.Sprintf("/stores/%d", tc.AccountId)
@@ -249,7 +249,7 @@ func TestUpdateStore(t *testing.T) {
 				"hashed_password": updateStore.HashedPassword,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStoreDB) {
 
@@ -300,7 +300,7 @@ func TestUpdateStore(t *testing.T) {
 				"hashed_password": updateStore.HashedPassword,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				arg := db.UpdateStoreParams{
@@ -349,7 +349,7 @@ func TestUpdateStore(t *testing.T) {
 				"hashed_password": updateStore.HashedPassword,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				arg := db.UpdateStoreParams{
@@ -398,7 +398,7 @@ func TestUpdateStore(t *testing.T) {
 				"hashed_password": updateStore.HashedPassword,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStoreDB) {
 				store.EXPECT().UpdateProduct(gomock.Any(), gomock.Any()).Times(0)
@@ -423,7 +423,7 @@ func TestUpdateStore(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server := NewTestServer(t,store)
+				server := NewTestServer(t, store)
 
 				recorder := httptest.NewRecorder()
 				data, err := json.Marshal(tc.body)
@@ -462,7 +462,7 @@ func TestCreateStore(t *testing.T) {
 				"hashed_password": storeRandom.HashedPassword,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStoreDB) {
 
@@ -540,7 +540,7 @@ func TestCreateStore(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-		server := NewTestServer(t,store)
+				server := NewTestServer(t, store)
 
 				recorder := httptest.NewRecorder()
 
@@ -627,7 +627,7 @@ func TestListStore(t *testing.T) {
 				store := mockdb.NewMockStoreDB(ctrl)
 				tc.buildStubs(store)
 
-				server := NewTestServer(t,store)
+				server := NewTestServer(t, store)
 
 				recorder := httptest.NewRecorder()
 

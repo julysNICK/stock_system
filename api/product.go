@@ -301,9 +301,12 @@ func (server *Server) GetProductsBySearch(ctx *gin.Context) {
 }
 
 type CreateProductBuyRequest struct {
-	ProductID int32 `json:"product_id" binding:"required,min=1"`
-	Quantity  int32 `json:"quantity" binding:"required,min=1"`
-	StoreID   int32 `json:"store_id" binding:"required,min=1"`
+	Quantity int32 `json:"quantity" binding:"required,min=1"`
+	StoreID  int32 `json:"store_id" binding:"required,min=1"`
+}
+
+type CreateProductBuyUri struct {
+	ProductID int32 `uri:"product_id" binding:"required,min=1"`
 }
 
 type CreateProductBuyResponse struct {
@@ -311,6 +314,13 @@ type CreateProductBuyResponse struct {
 }
 
 func (server *Server) CreateProductBuy(ctx *gin.Context) {
+
+	var reqUri CreateProductBuyUri
+
+	if err := ctx.ShouldBindUri(&reqUri); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
 	var req CreateProductBuyRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -319,7 +329,7 @@ func (server *Server) CreateProductBuy(ctx *gin.Context) {
 	}
 
 	arg := db.ProductBuyTxParams{
-		ProductID: req.ProductID,
+		ProductID: reqUri.ProductID,
 		Quantity:  req.Quantity,
 		StoreID:   req.StoreID,
 	}
@@ -332,4 +342,28 @@ func (server *Server) CreateProductBuy(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, product)
+}
+
+type DeleteProductBuyUri struct {
+	ProductID int64 `uri:"product_id" binding:"required,min=1"`
+}
+
+func (server *Server) DeleteProduct(ctx *gin.Context) {
+	
+	var reqUri DeleteProductBuyUri
+
+	if err := ctx.ShouldBindUri(&reqUri); err != nil {
+		validatorErrorParserInParams(ctx, err)
+		return
+	}
+
+	
+	id, err := server.store.DeleteProduct(ctx, reqUri.ProductID)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, id)
 }

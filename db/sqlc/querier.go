@@ -18,6 +18,7 @@ type Querier interface {
 	CreateStockAlert(ctx context.Context, arg CreateStockAlertParams) (StockAlert, error)
 	CreateStore(ctx context.Context, arg CreateStoreParams) (Store, error)
 	CreateSupplier(ctx context.Context, arg CreateSupplierParams) (Supplier, error)
+	DeleteProduct(ctx context.Context, id int64) (int64, error)
 	DeleteSale(ctx context.Context, id int64) error
 	DeleteStockAlert(ctx context.Context, id int64) error
 	GetAllSuppliers(ctx context.Context, arg GetAllSuppliersParams) ([]Supplier, error)
