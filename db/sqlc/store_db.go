@@ -11,6 +11,7 @@ type StoreDB interface {
 	SaleTx(ctx context.Context, arg SaleTxParams) (SaleTxResult, error)
 	StockAlertTx(ctx context.Context, arg StockAlertTxParams) (StockAlertTxResult, error)
 	ProductTx(ctx context.Context, arg ProductTxParams) (ProductTxResult, error)
+	ProductBuyTx(ctx context.Context, argTX ProductBuyTxParams) (ProductBuyTxResult, error)
 	GetStockAlertsByIdAndBySupplierTx(ctx context.Context, arg GetStockAlertTxsParams) (GetStockAlertTxsResult, error)
 }
 

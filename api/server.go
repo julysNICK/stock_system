@@ -47,16 +47,23 @@ func (server *Server) setupRouter() {
 	router.GET("/stores", server.ListStores)
 	router.POST("/stores", server.CreateStore)
 	router.GET("/products", server.ListProducts)
-	router.GET("/chat/:room", server.HandlerMessage)
-	router.GET("/products/:product_id", server.GetProduct)
-	router.POST("/products", server.CreateProduct)
-	router.PATCH("/products/:product_id", server.UpdateProduct)
-
 	router.PATCH("/stores/:store_id", server.UpdateStore)
 	router.GET("/stores/:store_id", server.GetStore)
 
+	router.GET("/chat/:room", server.HandlerMessage)
+
+	router.GET("/products/:product_id", server.GetProduct)
+	router.GET("/products/supplier/:supplier_id", server.GetProductsBySupplierId)
+	router.POST("/products", server.CreateProduct)
+	router.PATCH("/products/:product_id", server.UpdateProduct)
+	router.GET("/products/category", server.GetProductsByCategory)
+	router.GET("/products/search", server.GetProductsBySearch)
+	router.PATCH("/buy/products/:product_id", server.CreateProductBuy)
+	router.DELETE("/products/:product_id", server.DeleteProduct)
+
 	router.POST("/suppliers", server.CreateSupplier)
 	router.GET("/suppliers/:supplier_id", server.GetSupplier)
+	router.GET("/suppliers", server.ListSuppliers)
 	router.PATCH("/suppliers/:supplier_id", server.UpdateSupplier)
 
 	router.POST("/sales", server.CreateSale)
@@ -68,7 +75,8 @@ func (server *Server) setupRouter() {
 	router.GET("/stock_alerts/:stock_alert_id", server.GetStockAlert)
 	router.PATCH("/stock_alerts/:stock_alert_id", server.UpdateStockAlert)
 	router.DELETE("/stock_alerts/:stock_alert_id", server.DeleteStockAlert)
-	// authRoutes := router.Group("/").Use(authMiddleware(server.token))
+	authRoutes := router.Group("/").Use(authMiddleware(server.token))
+	authRoutes.GET("/stores/profile", server.ProfileStore)
 
 	server.router = router
 }

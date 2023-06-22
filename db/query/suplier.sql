@@ -19,3 +19,8 @@ RETURNING *;
   contact_phone = COALESCE(sqlc.narg(contact_phone), contact_phone)
   WHERE id = $1
   RETURNING *;
+
+  -- name: GetAllSuppliers :many
+  SELECT * FROM suppliers ORDER BY id ASC LIMIT $1 OFFSET $2;
+
+  

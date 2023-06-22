@@ -18,9 +18,10 @@ func addAuthorization(
 	tokenMaker token.Maker,
 	authorizationType string,
 	username string,
+	idStore int64,
 	duration time.Duration,
 ) {
-	token, payload, err := tokenMaker.CreateToken(username, duration)
+	token, payload, err := tokenMaker.CreateToken(idStore, username, duration)
 
 	require.NoError(t, err)
 
@@ -40,7 +41,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, time.Minute)
 			},
 			checkAuth: func(t *testing.T, recoder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recoder.Code)
@@ -61,7 +62,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "NO UNSUPPORTED AUTHORIZATION HEADER",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, "unsuported", "username", time.Minute)
+				addAuthorization(t, request, tokenMaker, "unsuported", "username", 1, time.Minute)
 			},
 			checkAuth: func(t *testing.T, recoder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recoder.Code)
@@ -71,7 +72,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "EXPIRED TOKEN",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", -time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeToken, "username", 1, -time.Minute)
 			},
 			checkAuth: func(t *testing.T, recoder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recoder.Code)

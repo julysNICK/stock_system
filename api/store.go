@@ -9,7 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	db "github.com/julysNICK/stock_system/db/sqlc"
+	"github.com/julysNICK/stock_system/token"
 	"github.com/julysNICK/stock_system/utils"
+)
+
+const (
+	AuthKey = "auth"
 )
 
 type CreateStoreRequest struct {
@@ -79,6 +84,44 @@ func (server *Server) GetStore(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, sale)
+
+}
+
+type ProfileStoreResponse struct {
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Address      string `json:"address"`
+	ContactEmail string `json:"contactEmail"`
+	ContactPhone string `json:"contactPhone"`
+
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+func (server *Server) ProfileStore(ctx *gin.Context) {
+	authPayload := ctx.MustGet(AuthorizationPayloadKeyToken).(*token.Payload)
+	fmt.Println(authPayload)
+
+	store, err := server.store.GetStore(ctx, authPayload.IdStore)
+
+	if err != nil {
+
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, ProfileStoreResponse{
+		ID:           store.ID,
+		Name:         store.Name,
+		Address:      store.Address,
+		ContactEmail: store.ContactEmail,
+		ContactPhone: store.ContactPhone,
+		CreatedAt:    store.CreatedAt,
+	})
 
 }
 
@@ -217,16 +260,17 @@ func (server *Server) LoginStore(ctx *gin.Context) {
 		return
 	}
 
-	duration := time.Now().Add(time.Hour * 24 * 7).Unix()
+	//create variable duration with value 24 hours
+	duration := 24 * time.Hour
 
-	accessToken, accessPayload, err := server.token.CreateToken(store.Name, time.Duration(duration))
+	accessToken, accessPayload, err := server.token.CreateToken(store.ID, store.Name, time.Duration(duration))
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	refreshToken, refreshPayload, err := server.token.CreateToken(store.Name, time.Duration(duration))
+	refreshToken, refreshPayload, err := server.token.CreateToken(store.ID, store.Name, time.Duration(duration))
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
