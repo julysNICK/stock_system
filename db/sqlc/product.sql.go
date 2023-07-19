@@ -166,14 +166,15 @@ func (q *Queries) GetProductsByCategory(ctx context.Context, arg GetProductsByCa
 }
 
 const getProductsWithJoinWithStore = `-- name: GetProductsWithJoinWithStore :many
-  SELECT products.id, products.name, products.category, products.image_url, products.description, products.price, products.quantity, products.store_id, products.supplier_id, products.created_at, stores.id, stores.name, stores.address, stores.contact_email, stores.contact_phone, stores.hashed_password, stores.created_at FROM products INNER JOIN stores ON products.store_id = stores.id WHERE products.category = $1
+  SELECT products.id, products.name, products.category, products.image_url, products.description, products.price, products.quantity, products.store_id, products.supplier_id, products.created_at, stores.id, stores.name, stores.address, stores.contact_email, stores.contact_phone, stores.hashed_password, stores.created_at FROM products INNER JOIN stores ON products.store_id = stores.id WHERE products.category = $1 AND products.store_id = $2
   ORDER BY products.id
-  LIMIT $2
-  OFFSET $3
+  LIMIT $3
+  OFFSET $4
 `
 
 type GetProductsWithJoinWithStoreParams struct {
 	Category string `json:"category"`
+	StoreID  int64  `json:"storeID"`
 	Limit    int32  `json:"limit"`
 	Offset   int32  `json:"offset"`
 }
@@ -199,7 +200,12 @@ type GetProductsWithJoinWithStoreRow struct {
 }
 
 func (q *Queries) GetProductsWithJoinWithStore(ctx context.Context, arg GetProductsWithJoinWithStoreParams) ([]GetProductsWithJoinWithStoreRow, error) {
-	rows, err := q.db.QueryContext(ctx, getProductsWithJoinWithStore, arg.Category, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, getProductsWithJoinWithStore,
+		arg.Category,
+		arg.StoreID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -312,16 +318,17 @@ func (q *Queries) GetProductsWithJoinWithSupplierBySupplierId(ctx context.Contex
 }
 
 const listAllProducts = `-- name: ListAllProducts :many
-SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products ORDER BY id LIMIT $1 OFFSET $2
+SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products WHERE store_id = $1 ORDER BY id LIMIT $2 OFFSET $3
 `
 
 type ListAllProductsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	StoreID int64 `json:"storeID"`
+	Limit   int32 `json:"limit"`
+	Offset  int32 `json:"offset"`
 }
 
 func (q *Queries) ListAllProducts(ctx context.Context, arg ListAllProductsParams) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, listAllProducts, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listAllProducts, arg.StoreID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -355,20 +362,26 @@ func (q *Queries) ListAllProducts(ctx context.Context, arg ListAllProductsParams
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products WHERE category = $1
+SELECT id, name, category, image_url, description, price, quantity, store_id, supplier_id, created_at FROM products WHERE category = $1 AND store_id = $2
 ORDER BY id
-LIMIT $2
-OFFSET $3
+LIMIT $3
+OFFSET $4
 `
 
 type ListProductsParams struct {
 	Category string `json:"category"`
+	StoreID  int64  `json:"storeID"`
 	Limit    int32  `json:"limit"`
 	Offset   int32  `json:"offset"`
 }
 
 func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, listProducts, arg.Category, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listProducts,
+		arg.Category,
+		arg.StoreID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
