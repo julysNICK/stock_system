@@ -20,13 +20,13 @@ SELECT * FROM products WHERE id = $1 LIMIT 1 FOR UPDATE FOR NO KEY UPDATE;
 
 
 -- name: ListAllProducts :many
-SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2;
+SELECT * FROM products WHERE store_id = $1 ORDER BY id LIMIT $2 OFFSET $3;
 
 -- name: ListProducts :many
-SELECT * FROM products WHERE category = $1
+SELECT * FROM products WHERE category = $1 AND store_id = $2
 ORDER BY id
-LIMIT $2
-OFFSET $3;
+LIMIT $3
+OFFSET $4;
 
 -- name: SearchProducts :many
 SELECT * FROM products WHERE name ILIKE '%' || $1 || '%' ;
@@ -44,10 +44,10 @@ WHERE id = $1
 RETURNING *;
 
 -- name: GetProductsWithJoinWithStore :many
-  SELECT products.*, stores.* FROM products INNER JOIN stores ON products.store_id = stores.id WHERE products.category = $1
+  SELECT products.*, stores.* FROM products INNER JOIN stores ON products.store_id = stores.id WHERE products.category = $1 AND products.store_id = $2
   ORDER BY products.id
-  LIMIT $2
-  OFFSET $3;
+  LIMIT $3
+  OFFSET $4;
 
 
 -- name: GetProductsWithJoinWithSupplierBySupplierId :many

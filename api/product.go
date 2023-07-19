@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/julysNICK/stock_system/db/sqlc"
+	"github.com/julysNICK/stock_system/token"
 )
 
 type CreateProductRequest struct {
@@ -101,10 +102,12 @@ func (server *Server) ListProducts(ctx *gin.Context) {
 		validatorErrorParserInParams(ctx, err)
 		return
 	}
+	authPayload := ctx.MustGet(AuthorizationPayloadKeyToken).(*token.Payload)
 	if req.Category == "all" {
 		arg := db.ListAllProductsParams{
-			Limit:  req.Limit,
-			Offset: (req.PageID - 1) * req.Limit,
+			StoreID: authPayload.IdStore,
+			Limit:   req.Limit,
+			Offset:  (req.PageID - 1) * req.Limit,
 		}
 
 		products, err := server.store.ListAllProducts(ctx, arg)
@@ -116,6 +119,7 @@ func (server *Server) ListProducts(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, products)
 	} else {
 		arg := db.GetProductsWithJoinWithStoreParams{
+			StoreID:  authPayload.IdStore,
 			Limit:    req.Limit,
 			Offset:   (req.PageID - 1) * req.Limit,
 			Category: req.Category,
@@ -349,7 +353,7 @@ type DeleteProductBuyUri struct {
 }
 
 func (server *Server) DeleteProduct(ctx *gin.Context) {
-	
+
 	var reqUri DeleteProductBuyUri
 
 	if err := ctx.ShouldBindUri(&reqUri); err != nil {
@@ -357,7 +361,6 @@ func (server *Server) DeleteProduct(ctx *gin.Context) {
 		return
 	}
 
-	
 	id, err := server.store.DeleteProduct(ctx, reqUri.ProductID)
 
 	if err != nil {

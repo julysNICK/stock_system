@@ -99,7 +99,6 @@ type ProfileStoreResponse struct {
 
 func (server *Server) ProfileStore(ctx *gin.Context) {
 	authPayload := ctx.MustGet(AuthorizationPayloadKeyToken).(*token.Payload)
-	fmt.Println(authPayload)
 
 	store, err := server.store.GetStore(ctx, authPayload.IdStore)
 
